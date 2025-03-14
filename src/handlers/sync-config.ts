@@ -9,19 +9,19 @@ export async function syncConfigs(context: Context) {
     throw logger.error("Comment is from a bot. Skipping.");
   }
 
+  // Fetch the Editor Instruction
+  const extractedInstructions = extractEditorInstruction(context);
+  if (!extractedInstructions) {
+    return { status: 200, reason: logger.info("No editor instruction found in comment. Skipping.").logMessage.raw };
+  }
+  const { editorInstruction } = extractedInstructions;
+
   // Use the payload to determine if this is a pull or issue
   if (eventName === "pull_request_review_comment.created") {
     // eslint-disable-next-line
     // TODO: Implement Pull Request Review Comment Support
     throw logger.error("This is a pull request, not supported for now");
   }
-
-  // Fetch the Editor Instruction
-  const result = extractEditorInstruction(context);
-  if (!result) {
-    return { status: 200, reason: logger.info("No editor instruction found in comment. Skipping.").logMessage.raw };
-  }
-  const { editorInstruction } = result;
 
   // Check user permissions before proceeding allow only if (admin || write)
   // eslint-disable-next-line
