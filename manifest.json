@@ -1,25 +1,74 @@
 {
-  "name": "ts-template",
-  "description": "ts-template for UbiquityOS plugins.",
+  "name": "command-config",
+  "description": "Edits UbiquityOS configuration files based on natural language queries.",
   "ubiquity:listeners": ["issue_comment.created", "pull_request_review_comment.created"],
   "commands": {
-    "hello": {
-      "ubiquity:example": "/hello argument",
-      "description": "Hello command with an argument."
+    "config": {
+      "ubiquity:example": "/config <editor_instruction>",
+      "description": "Configure the UbiquityOS plugin.",
+      "parameters": {
+        "editor_instruction": {
+          "description": "The instruction to make changes to the configuration.",
+          "type": "string"
+        }
+      }
     }
   },
   "configuration": {
     "default": {},
     "type": "object",
     "properties": {
-      "configurableResponse": {
-        "default": "Hello, world!",
+      "baseUrl": {
+        "default": "https://openrouter.ai/api/v1",
         "type": "string"
       },
-      "customStringsUrl": {
+      "parserPath": {
+        "default": "https://github.com/ubiquity-os/ubiquity-os-kernel.git",
         "type": "string"
+      },
+      "configPath": {
+        "default": ".github/.ubiquity-os.config.yml",
+        "type": "string"
+      },
+      "devConfigPath": {
+        "default": ".github/.ubiquity-os.config.dev.yml",
+        "type": "string"
+      },
+      "defaultTargets": {
+        "default": [
+          {
+            "name": "https://github.com/ubiquity-os/.ubiquity-os.git",
+            "type": "dev"
+          }
+        ],
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "default": "https://github.com/ubiquity-os/.ubiquity-os.git",
+              "type": "string"
+            },
+            "branch": {
+              "default": "main",
+              "type": "string"
+            },
+            "type": {
+              "default": "main",
+              "anyOf": [
+                {
+                  "const": "main",
+                  "type": "string"
+                },
+                {
+                  "const": "dev",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
       }
     }
-  },
-  "homepage_url": "https://your-plugin-name-development.ubiquity.workers.dev"
+  }
 }
