@@ -1,4 +1,4 @@
-name: "the name of the plugin"
+name: "command-config"
 
 on:
   workflow_dispatch:
@@ -31,8 +31,7 @@ jobs:
       PLUGIN_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       KERNEL_PUBLIC_KEY: ${{ secrets.KERNEL_PUBLIC_KEY }}
       LOG_LEVEL: ${{ secrets.LOG_LEVEL || 'info' }}
-      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-      SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
 
     steps:
       - uses: actions/checkout@v4

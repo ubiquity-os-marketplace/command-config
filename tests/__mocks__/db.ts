@@ -5,10 +5,33 @@ import { factory, nullable, primaryKey } from "@mswjs/data";
  * Creates an object that can be used as a db to persist data within tests
  */
 export const db = factory({
+  pulls: {
+    id: primaryKey(Number),
+    owner: String,
+    repo: String,
+    number: Number,
+    html_url: String,
+  },
+  git_refs: {
+    id: primaryKey(Number),
+    owner: String,
+    repo: String,
+    ref: String,
+    sha: String,
+  },
+  git_files: {
+    id: primaryKey(Number),
+    owner: String,
+    repo: String,
+    path: String,
+    sha: String,
+    content: String,
+  },
   users: {
     id: primaryKey(Number),
     name: String,
     login: String,
+    type: String,
   },
   issue: {
     id: primaryKey(Number),
@@ -69,6 +92,7 @@ export const db = factory({
       id: Number,
     },
     issues: Array,
+    default_branch: String,
   },
   issueComments: {
     id: primaryKey(Number),
@@ -79,6 +103,7 @@ export const db = factory({
     user: {
       login: String,
       id: Number,
+      type: String,
     },
   },
 });

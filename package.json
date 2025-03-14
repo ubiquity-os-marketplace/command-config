@@ -1,7 +1,7 @@
 {
-  "name": "plugin-template",
+  "name": "@ubiquity-os-marketplace/command-config",
   "version": "1.0.0",
-  "description": "Ubiquibot plugin template repository with TypeScript support.",
+  "description": "Use plain english to change our organization configs for UbiquityOS.",
   "author": "Ubiquity DAO",
   "license": "MIT",
   "main": "src/worker.ts",
@@ -37,7 +37,10 @@
     "@ubiquity-os/ubiquity-os-logger": "^1.4.0",
     "dotenv": "16.4.7",
     "hono": "^4.6.19",
-    "ts-node": "^10.9.2"
+    "js-yaml": "^4.1.0",
+    "openai": "^4.86.2",
+    "ts-node": "^10.9.2",
+    "typebox-validators": "^0.3.5"
   },
   "devDependencies": {
     "@commitlint/cli": "19.6.1",
@@ -49,6 +52,7 @@
     "@jest/globals": "29.7.0",
     "@mswjs/data": "0.16.2",
     "@types/jest": "^29.5.14",
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "22.12.0",
     "cross-env": "^7.0.3",
     "cspell": "8.17.3",
