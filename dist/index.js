@@ -54840,25 +54840,44 @@ async function processOrgConfig(a, C) {
   if (!Ue) {
     throw ae.error("Organization not found in payload.");
   }
+  let lt, Pt;
+  const Wt = await checkOrgPermissions(a, Ue, ".ubiquity-os");
   try {
-    const q = await getFileContent(a, Ue, ".ubiquity-os", re.configPath);
-    if (!q) {
-      ae.info("No configuration found at repository or organization level.");
-      return;
+    lt = await getFileContent(a, Ue, ".ubiquity-os", re.configPath);
+    if (lt) {
+      const a = {
+        type: "config",
+        owner: Ue,
+        repo: ".ubiquity-os",
+        localDir: external_path_default().join(Ue, ".ubiquity-os"),
+        url: `https://github.com/${Ue}/.ubiquity-os.git`,
+        filePath: re.configPath,
+        readonly: !Wt,
+      };
+      C[buildIdForTarget(a)] = a;
     }
-    const lt = await checkOrgPermissions(a, Ue, ".ubiquity-os");
-    const Pt = {
-      type: "config",
-      owner: Ue,
-      repo: ".ubiquity-os",
-      localDir: external_path_default().join(Ue, ".ubiquity-os"),
-      url: `https://github.com/${Ue}/.ubiquity-os.git`,
-      filePath: re.configPath,
-      readonly: !lt,
-    };
-    C[buildIdForTarget(Pt)] = Pt;
   } catch (a) {
     ae.info(`Organization config file not found: ${Ue}/.ubiquity-os/${re.configPath}. Error: ${a instanceof Error ? a.message : String(a)}`);
+  }
+  try {
+    Pt = await getFileContent(a, Ue, ".ubiquity-os", re.devConfigPath);
+    if (Pt) {
+      const a = {
+        type: "dev",
+        owner: Ue,
+        repo: ".ubiquity-os",
+        localDir: external_path_default().join(Ue, ".ubiquity-os"),
+        url: `https://github.com/${Ue}/.ubiquity-os.git`,
+        filePath: re.devConfigPath,
+        readonly: !Wt,
+      };
+      C[buildIdForTarget(a)] = a;
+    }
+  } catch (a) {
+    ae.info(`Organization dev config file not found: ${Ue}/.ubiquity-os/${re.devConfigPath}. Error: ${a instanceof Error ? a.message : String(a)}`);
+  }
+  if (!lt && !Pt) {
+    ae.info("No configuration found at organization level.");
   }
 }
 async function targetBuilder(a) {
