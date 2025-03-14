@@ -54919,14 +54919,14 @@ async function syncConfigs(a) {
   if (C.comment.user?.type === "Bot") {
     throw q.error("Comment is from a bot. Skipping.");
   }
-  if (re === "pull_request_review_comment.created") {
-    throw q.error("This is a pull request, not supported for now");
-  }
   const ae = extractEditorInstruction(a);
   if (!ae) {
     return { status: 200, reason: q.info("No editor instruction found in comment. Skipping.").logMessage.raw };
   }
   const { editorInstruction: Ue } = ae;
+  if (re === "pull_request_review_comment.created") {
+    throw q.error("This is a pull request, not supported for now");
+  }
   if ((await checkUserPermissions(a)) === false) {
     throw q.error("User does not have the required permissions. Skipping.");
   }
