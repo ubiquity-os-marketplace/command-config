@@ -104,30 +104,53 @@ async function processOrgConfig(context: Context, targetMap: Record<string, Targ
     throw logger.error("Organization not found in payload.");
   }
 
+  let orgConfig, orgDevConfig;
+  const hasOrgPermission = await checkOrgPermissions(context, orgName, ".ubiquity-os");
+
   try {
-    // Try to get org level configs
-    const orgConfig = await getFileContent(context, orgName, ".ubiquity-os", config.configPath);
-    if (!orgConfig) {
-      logger.info("No configuration found at repository or organization level.");
-      return;
+    // Try to get org level main config
+    orgConfig = await getFileContent(context, orgName, ".ubiquity-os", config.configPath);
+    if (orgConfig) {
+      const orgRepoTarget: Target = {
+        type: "config",
+        owner: orgName,
+        repo: ".ubiquity-os",
+        localDir: path.join(orgName, ".ubiquity-os"),
+        url: `https://github.com/${orgName}/.ubiquity-os.git`,
+        filePath: config.configPath,
+        readonly: !hasOrgPermission,
+      };
+      targetMap[buildIdForTarget(orgRepoTarget)] = orgRepoTarget;
     }
-
-    const hasOrgPermission = await checkOrgPermissions(context, orgName, ".ubiquity-os");
-    const orgRepoTarget: Target = {
-      type: "config",
-      owner: orgName,
-      repo: ".ubiquity-os",
-      localDir: path.join(orgName, ".ubiquity-os"),
-      url: `https://github.com/${orgName}/.ubiquity-os.git`,
-      filePath: config.configPath,
-      readonly: !hasOrgPermission,
-    };
-
-    targetMap[buildIdForTarget(orgRepoTarget)] = orgRepoTarget;
   } catch (error: unknown) {
     logger.info(
       `Organization config file not found: ${orgName}/.ubiquity-os/${config.configPath}. Error: ${error instanceof Error ? error.message : String(error)}`
     );
+  }
+
+  try {
+    // Try to get org level dev config
+    orgDevConfig = await getFileContent(context, orgName, ".ubiquity-os", config.devConfigPath);
+    if (orgDevConfig) {
+      const orgDevRepoTarget: Target = {
+        type: "dev",
+        owner: orgName,
+        repo: ".ubiquity-os",
+        localDir: path.join(orgName, ".ubiquity-os"),
+        url: `https://github.com/${orgName}/.ubiquity-os.git`,
+        filePath: config.devConfigPath,
+        readonly: !hasOrgPermission,
+      };
+      targetMap[buildIdForTarget(orgDevRepoTarget)] = orgDevRepoTarget;
+    }
+  } catch (error: unknown) {
+    logger.info(
+      `Organization dev config file not found: ${orgName}/.ubiquity-os/${config.devConfigPath}. Error: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
+
+  if (!orgConfig && !orgDevConfig) {
+    logger.info("No configuration found at organization level.");
   }
 }
 
