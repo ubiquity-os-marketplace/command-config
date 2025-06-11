@@ -23901,8 +23901,8 @@ var __webpack_modules__ = {
       kLocalAddress: Sn,
       kMaxResponseSize: Fn,
       kHTTPConnVersion: Dn,
-      kHost: On,
-      kHTTP2Session: kn,
+      kHost: kn,
+      kHTTP2Session: On,
       kHTTP2SessionState: Pn,
       kHTTP2BuildRequest: Nn,
       kHTTP2CopyHeaders: Un,
@@ -24072,9 +24072,9 @@ var __webpack_modules__ = {
         this[Kn] = null;
         this[Fn] = Kr > -1 ? Kr : -1;
         this[Dn] = "h1";
-        this[kn] = null;
+        this[On] = null;
         this[Pn] = !Zr ? null : { openStreams: 0, maxConcurrentStreams: en != null ? en : 100 };
-        this[On] = `${this[Vr].hostname}${this[Vr].port ? `:${this[Vr].port}` : ""}`;
+        this[kn] = `${this[Vr].hostname}${this[Vr].port ? `:${this[Vr].port}` : ""}`;
         this[rn] = [];
         this[pn] = 0;
         this[cn] = 0;
@@ -24145,9 +24145,9 @@ var __webpack_modules__ = {
             }
             C();
           };
-          if (this[kn] != null) {
-            Pt.destroy(this[kn], a);
-            this[kn] = null;
+          if (this[On] != null) {
+            Pt.destroy(this[On], a);
+            this[On] = null;
             this[Pn] = null;
           }
           if (!this[mn]) {
@@ -24179,7 +24179,7 @@ var __webpack_modules__ = {
       const C = this[Yr];
       const q = new Nr(`HTTP/2: "GOAWAY" frame received with code ${a}`);
       C[mn] = null;
-      C[kn] = null;
+      C[On] = null;
       if (C.destroyed) {
         re(this[Zr] === 0);
         const a = C[rn].splice(C[pn]);
@@ -24737,8 +24737,8 @@ var __webpack_modules__ = {
           C.on("goaway", onHTTP2GoAway);
           C.on("close", onSocketClose);
           C.unref();
-          a[kn] = C;
-          ae[kn] = C;
+          a[On] = C;
+          ae[On] = C;
         } else {
           if (!es) {
             es = await ts;
@@ -24871,7 +24871,7 @@ var __webpack_modules__ = {
         if (a[sn]) {
           return;
         }
-        if (!q && !a[kn]) {
+        if (!q && !a[On]) {
           connect(a);
           return;
         }
@@ -24899,7 +24899,7 @@ var __webpack_modules__ = {
     }
     function write(a, C) {
       if (a[Dn] === "h2") {
-        writeH2(a, a[kn], C);
+        writeH2(a, a[On], C);
         return;
       }
       const { body: q, method: ae, path: Ue, host: lt, upgrade: Wt, headers: Ar, blocking: Er, reset: Br } = C;
@@ -25029,7 +25029,7 @@ var __webpack_modules__ = {
       }
       let Pr;
       const Ur = a[Pn];
-      kr[xn] = Wt || a[On];
+      kr[xn] = Wt || a[kn];
       kr[Gn] = Ue;
       if (Ue === "CONNECT") {
         C.ref();
@@ -25105,7 +25105,7 @@ var __webpack_modules__ = {
         }
       });
       Pr.once("error", function (C) {
-        if (a[kn] && !a[kn].destroyed && !this.closed && !this.destroyed) {
+        if (a[On] && !a[On].destroyed && !this.closed && !this.destroyed) {
           Ur.streams -= 1;
           Pt.destroy(Pr, C);
         }
@@ -25113,7 +25113,7 @@ var __webpack_modules__ = {
       Pr.once("frameError", (C, re) => {
         const ae = new Nr(`HTTP/2: "frameError" received - type ${C}, code ${re}`);
         errorRequest(a, q, ae);
-        if (a[kn] && !a[kn].destroyed && !this.closed && !this.destroyed) {
+        if (a[On] && !a[On].destroyed && !this.closed && !this.destroyed) {
           Ur.streams -= 1;
           Pt.destroy(Pr, ae);
         }
@@ -28612,8 +28612,8 @@ var __webpack_modules__ = {
     const { getGlobalDispatcher: Sn } = q(2581);
     const { webidl: Fn } = q(4222);
     const { STATUS_CODES: Dn } = q(8611);
-    const On = ["GET", "HEAD"];
-    let kn;
+    const kn = ["GET", "HEAD"];
+    let On;
     let Pn = globalThis.ReadableStream;
     class Fetch extends In {
       constructor(a) {
@@ -28913,14 +28913,14 @@ var __webpack_modules__ = {
           return Promise.resolve(ae("about scheme is not supported"));
         }
         case "blob:": {
-          if (!kn) {
-            kn = q(181).resolveObjectURL;
+          if (!On) {
+            On = q(181).resolveObjectURL;
           }
           const a = Ur(C);
           if (a.search.length !== 0) {
             return Promise.resolve(ae("NetworkError when attempting to fetch resource."));
           }
-          const re = kn(a.toString());
+          const re = On(a.toString());
           if (C.method !== "GET" || !Wr(re)) {
             return Promise.resolve(ae("invalid method"));
           }
@@ -29078,7 +29078,7 @@ var __webpack_modules__ = {
       if (re.status !== 303 && q.body != null && q.body.source == null) {
         return Promise.resolve(ae());
       }
-      if (([301, 302].includes(re.status) && q.method === "POST") || (re.status === 303 && !On.includes(q.method))) {
+      if (([301, 302].includes(re.status) && q.method === "POST") || (re.status === 303 && !kn.includes(q.method))) {
         q.method = "GET";
         q.body = null;
         for (const a of fn) {
@@ -41975,21 +41975,21 @@ var Context = class {
   #S = true;
   #F;
   #D;
-  #O;
-  #h;
   #k;
+  #h;
+  #O;
   constructor(a, C) {
     this.#b = a;
     if (C) {
       this.#Q = C.executionCtx;
       this.env = C.env;
-      this.#O = C.notFoundHandler;
-      this.#k = C.path;
+      this.#k = C.notFoundHandler;
+      this.#O = C.path;
       this.#h = C.matchResult;
     }
   }
   get req() {
-    this.#_ ??= new HonoRequest(this.#b, this.#k, this.#h);
+    this.#_ ??= new HonoRequest(this.#b, this.#O, this.#h);
     return this.#_;
   }
   get event() {
@@ -42179,8 +42179,8 @@ var Context = class {
     return this.newResponse(null, C ?? 302);
   };
   notFound = () => {
-    this.#O ??= () => new Response();
-    return this.#O(this);
+    this.#k ??= () => new Response();
+    return this.#k(this);
   };
 };
 var compose = (a, C, q) => (re, ae) => {
@@ -42253,29 +42253,29 @@ var hono_base_Hono = class {
   router;
   getPath;
   _basePath = "/";
-  #k = "/";
+  #O = "/";
   routes = [];
   constructor(a = {}) {
     const C = [...METHODS, METHOD_NAME_ALL_LOWERCASE];
     C.forEach((a) => {
       this[a] = (C, ...q) => {
         if (typeof C === "string") {
-          this.#k = C;
+          this.#O = C;
         } else {
-          this.#N(a, this.#k, C);
+          this.#N(a, this.#O, C);
         }
         q.forEach((C) => {
-          this.#N(a, this.#k, C);
+          this.#N(a, this.#O, C);
         });
         return this;
       };
     });
     this.on = (a, C, ...q) => {
       for (const re of [C].flat()) {
-        this.#k = re;
+        this.#O = re;
         for (const C of [a].flat()) {
           q.map((a) => {
-            this.#N(C.toUpperCase(), this.#k, a);
+            this.#N(C.toUpperCase(), this.#O, a);
           });
         }
       }
@@ -42283,13 +42283,13 @@ var hono_base_Hono = class {
     };
     this.use = (a, ...C) => {
       if (typeof a === "string") {
-        this.#k = a;
+        this.#O = a;
       } else {
-        this.#k = "*";
+        this.#O = "*";
         C.unshift(a);
       }
       C.forEach((a) => {
-        this.#N(METHOD_NAME_ALL, this.#k, a);
+        this.#N(METHOD_NAME_ALL, this.#O, a);
       });
       return this;
     };
@@ -42303,7 +42303,7 @@ var hono_base_Hono = class {
     a.routes = this.routes;
     return a;
   }
-  #O = notFoundHandler;
+  #k = notFoundHandler;
   errorHandler = errorHandler;
   route(a, C) {
     const q = this.basePath(a);
@@ -42329,7 +42329,7 @@ var hono_base_Hono = class {
     return this;
   };
   notFound = (a) => {
-    this.#O = a;
+    this.#k = a;
     return this;
   };
   mount(a, C, q) {
@@ -42393,19 +42393,19 @@ var hono_base_Hono = class {
     }
     const ae = this.getPath(a, { env: q });
     const Ue = this.router.match(re, ae);
-    const lt = new Context(a, { path: ae, matchResult: Ue, env: q, executionCtx: C, notFoundHandler: this.#O });
+    const lt = new Context(a, { path: ae, matchResult: Ue, env: q, executionCtx: C, notFoundHandler: this.#k });
     if (Ue[0].length === 1) {
       let a;
       try {
         a = Ue[0][0][0][0](lt, async () => {
-          lt.res = await this.#O(lt);
+          lt.res = await this.#k(lt);
         });
       } catch (a) {
         return this.#L(a, lt);
       }
-      return a instanceof Promise ? a.then((a) => a || (lt.finalized ? lt.res : this.#O(lt))).catch((a) => this.#L(a, lt)) : (a ?? this.#O(lt));
+      return a instanceof Promise ? a.then((a) => a || (lt.finalized ? lt.res : this.#k(lt))).catch((a) => this.#L(a, lt)) : (a ?? this.#k(lt));
     }
-    const Pt = compose(Ue[0], this.errorHandler, this.#O);
+    const Pt = compose(Ue[0], this.errorHandler, this.#k);
     return (async () => {
       try {
         const a = await Pt(lt);
@@ -45255,6 +45255,29 @@ function legacyRestEndpointMethods(a) {
 }
 legacyRestEndpointMethods.VERSION = dist_src_version_VERSION;
 var light = __nccwpck_require__(3251);
+class dist_src_RequestError extends Error {
+  name;
+  status;
+  request;
+  response;
+  constructor(a, C, q) {
+    super(a);
+    this.name = "HttpError";
+    this.status = Number.parseInt(C);
+    if (Number.isNaN(this.status)) {
+      this.status = 0;
+    }
+    if ("response" in q) {
+      this.response = q.response;
+    }
+    const re = Object.assign({}, q.request);
+    if (q.request.headers.authorization) {
+      re.headers = Object.assign({}, q.request.headers, { authorization: q.request.headers.authorization.replace(/ .*$/, " [REDACTED]") });
+    }
+    re.url = re.url.replace(/\bclient_secret=\w+/g, "client_secret=[REDACTED]").replace(/\baccess_token=\w+/g, "access_token=[REDACTED]");
+    this.request = re;
+  }
+}
 var plugin_retry_dist_bundle_VERSION = "0.0.0-development";
 async function errorRequest(a, C, q, re) {
   if (!q.request || !q.request.request) {
@@ -45282,7 +45305,7 @@ async function wrapRequest(a, C, q, re) {
 async function requestWithGraphqlErrorHandling(a, C, q, re) {
   const ae = await q(q, re);
   if (ae.data && ae.data.errors && ae.data.errors.length > 0 && /Something went wrong while executing your query/.test(ae.data.errors[0].message)) {
-    const q = new RequestError(ae.data.errors[0].message, 500, { request: re, response: ae });
+    const q = new dist_src_RequestError(ae.data.errors[0].message, 500, { request: re, response: ae });
     return errorRequest(a, C, q, re);
   }
   return ae;
@@ -54042,6 +54065,7 @@ var emitterEventNames = [
   "custom_property",
   "custom_property.created",
   "custom_property.deleted",
+  "custom_property.promote_to_enterprise",
   "custom_property.updated",
   "custom_property_values",
   "custom_property_values.updated",
@@ -54119,10 +54143,12 @@ var emitterEventNames = [
   "issues.pinned",
   "issues.reopened",
   "issues.transferred",
+  "issues.typed",
   "issues.unassigned",
   "issues.unlabeled",
   "issues.unlocked",
   "issues.unpinned",
+  "issues.untyped",
   "label",
   "label.created",
   "label.deleted",
@@ -54457,84 +54483,143 @@ async function verifyAndReceive(a, C) {
   }
   return a.eventHandler.receive({ id: C.id, name: C.name, payload: re });
 }
+var isApplicationJsonRE = /^\s*(application\/json)\s*(?:;|$)/u;
 var WEBHOOK_HEADERS = null && ["x-github-event", "x-hub-signature-256", "x-github-delivery"];
-function getMissingHeaders(a) {
-  return WEBHOOK_HEADERS.filter((C) => !(C in a.headers));
+function createMiddleware(a) {
+  const { handleResponse: C, getRequestHeader: q, getPayload: re } = a;
+  return function middleware(a, ae) {
+    return async function octokitWebhooksMiddleware(Ue, lt, Pt) {
+      let Wt;
+      try {
+        Wt = new URL(Ue.url, "http://localhost").pathname;
+      } catch (a) {
+        return C(JSON.stringify({ error: `Request URL could not be parsed: ${Ue.url}` }), 422, { "content-type": "application/json" }, lt);
+      }
+      if (Wt !== ae.path) {
+        Pt?.();
+        return C(null);
+      } else if (Ue.method !== "POST") {
+        return C(JSON.stringify({ error: `Unknown route: ${Ue.method} ${Wt}` }), 404, { "content-type": "application/json" }, lt);
+      }
+      const Ar = q(Ue, "content-type");
+      if (typeof Ar !== "string" || !isApplicationJsonRE.test(Ar)) {
+        return C(
+          JSON.stringify({ error: `Unsupported "Content-Type" header value. Must be "application/json"` }),
+          415,
+          { "content-type": "application/json", accept: "application/json" },
+          lt
+        );
+      }
+      const Er = WEBHOOK_HEADERS.filter((a) => q(Ue, a) == void 0).join(", ");
+      if (Er) {
+        return C(JSON.stringify({ error: `Required headers missing: ${Er}` }), 400, { "content-type": "application/json", accept: "application/json" }, lt);
+      }
+      const Ir = q(Ue, "x-github-event");
+      const Br = q(Ue, "x-hub-signature-256");
+      const Qr = q(Ue, "x-github-delivery");
+      ae.log.debug(`${Ir} event received (id: ${Qr})`);
+      let Fr = false;
+      let Dr;
+      const kr = new Promise((a) => {
+        Dr = setTimeout(() => {
+          Fr = true;
+          a(C("still processing\n", 202, { "Content-Type": "text/plain", accept: "application/json" }, lt));
+        }, ae.timeout);
+      });
+      const processWebhook = async () => {
+        try {
+          const q = await re(Ue);
+          await a.verifyAndReceive({ id: Qr, name: Ir, payload: q, signature: Br });
+          clearTimeout(Dr);
+          if (Fr) return C(null);
+          return C("ok\n", 200, { "content-type": "text/plain", accept: "application/json" }, lt);
+        } catch (a) {
+          clearTimeout(Dr);
+          if (Fr) return C(null);
+          const q = Array.from(a.errors)[0];
+          const re = q.message ? `${q.name}: ${q.message}` : "Error: An Unspecified error occurred";
+          const Ue = typeof q.status !== "undefined" ? q.status : 500;
+          ae.log.error(a);
+          return C(JSON.stringify({ error: re }), Ue, { "content-type": "application/json", accept: "application/json" }, lt);
+        }
+      };
+      return await Promise.race([kr, processWebhook()]);
+    };
+  };
 }
-function getPayload(a) {
-  if (typeof a.body === "object" && "rawBody" in a && a.rawBody instanceof Buffer) {
-    return Promise.resolve(a.rawBody.toString("utf8"));
-  } else if (typeof a.body === "string") {
-    return Promise.resolve(a.body);
+function handleResponse(a, C = 200, q = {}, re) {
+  if (a === null) {
+    return false;
   }
+  q["content-length"] = a.length.toString();
+  re.writeHead(C, q).end(a);
+  return true;
+}
+function getRequestHeader(a, C) {
+  return a.headers[C];
+}
+function concatUint8Array(a) {
+  if (a.length === 0) {
+    return new Uint8Array(0);
+  }
+  let C = 0;
+  for (let q = 0; q < a.length; q++) {
+    C += a[q].length;
+  }
+  if (C === 0) {
+    return new Uint8Array(0);
+  }
+  const q = new Uint8Array(C);
+  let re = 0;
+  for (let C = 0; C < a.length; C++) {
+    q.set(a[C], re);
+    re += a[C].length;
+  }
+  return q;
+}
+var textDecoder = new TextDecoder("utf-8", { fatal: false });
+var decode = textDecoder.decode.bind(textDecoder);
+async function getPayload(a) {
+  if (typeof a.body === "object" && "rawBody" in a && a.rawBody instanceof Uint8Array) {
+    return decode(a.rawBody);
+  } else if (typeof a.body === "string") {
+    return a.body;
+  }
+  const C = await getPayloadFromRequestStream(a);
+  return decode(C);
+}
+function getPayloadFromRequestStream(a) {
   return new Promise((C, q) => {
     let re = [];
     a.on("error", (a) => q(new AggregateError([a], a.message)));
-    a.on("data", (a) => re.push(a));
-    a.on("end", () => setImmediate(C, re.length === 1 ? re[0].toString("utf8") : Buffer.concat(re).toString("utf8")));
+    a.on("data", re.push.bind(re));
+    a.on("end", () => {
+      const a = concatUint8Array(re);
+      queueMicrotask(() => C(a));
+    });
   });
 }
-function onUnhandledRequestDefault(a, C) {
-  C.writeHead(404, { "content-type": "application/json" });
-  C.end(JSON.stringify({ error: `Unknown route: ${a.method} ${a.url}` }));
+function createNodeMiddleware(a, { path: C = "/api/github/webhooks", log: q = createLogger(), timeout: re = 9e3 } = {}) {
+  return createMiddleware({ handleResponse: handleResponse, getRequestHeader: getRequestHeader, getPayload: getPayload })(a, { path: C, log: q, timeout: re });
 }
-async function middleware(a, C, q, re, ae) {
-  let Ue;
-  try {
-    Ue = new URL(q.url, "http://localhost").pathname;
-  } catch (a) {
-    re.writeHead(422, { "content-type": "application/json" });
-    re.end(JSON.stringify({ error: `Request URL could not be parsed: ${q.url}` }));
-    return true;
-  }
-  if (Ue !== C.path) {
-    ae?.();
-    return false;
-  } else if (q.method !== "POST") {
-    onUnhandledRequestDefault(q, re);
-    return true;
-  }
-  if (!q.headers["content-type"] || !q.headers["content-type"].startsWith("application/json")) {
-    re.writeHead(415, { "content-type": "application/json", accept: "application/json" });
-    re.end(JSON.stringify({ error: `Unsupported "Content-Type" header value. Must be "application/json"` }));
-    return true;
-  }
-  const lt = getMissingHeaders(q).join(", ");
-  if (lt) {
-    re.writeHead(400, { "content-type": "application/json" });
-    re.end(JSON.stringify({ error: `Required headers missing: ${lt}` }));
-    return true;
-  }
-  const Pt = q.headers["x-github-event"];
-  const Wt = q.headers["x-hub-signature-256"];
-  const Ar = q.headers["x-github-delivery"];
-  C.log.debug(`${Pt} event received (id: ${Ar})`);
-  let Er = false;
-  const Ir = setTimeout(() => {
-    Er = true;
-    re.statusCode = 202;
-    re.end("still processing\n");
-  }, 9e3).unref();
-  try {
-    const C = await getPayload(q);
-    await a.verifyAndReceive({ id: Ar, name: Pt, payload: C, signature: Wt });
-    clearTimeout(Ir);
-    if (Er) return true;
-    re.end("ok\n");
-    return true;
-  } catch (a) {
-    clearTimeout(Ir);
-    if (Er) return true;
-    const q = Array.from(a.errors)[0];
-    const ae = q.message ? `${q.name}: ${q.message}` : "Error: An Unspecified error occurred";
-    re.statusCode = typeof q.status !== "undefined" ? q.status : 500;
-    C.log.error(a);
-    re.end(JSON.stringify({ error: ae }));
-    return true;
-  }
+function getPayload2(a) {
+  return a.text();
 }
-function createNodeMiddleware(a, { path: C = "/api/github/webhooks", log: q = createLogger() } = {}) {
-  return middleware.bind(null, a, { path: C, log: q });
+function getRequestHeader2(a, C) {
+  return a.headers.get(C);
+}
+function handleResponse2(a, C = 200, q = {}) {
+  if (a !== null) {
+    q["content-length"] = a.length.toString();
+  }
+  return new Response(a, { status: C, headers: q });
+}
+function createWebMiddleware(a, { path: C = "/api/github/webhooks", log: q = createLogger(), timeout: re = 9e3 } = {}) {
+  return createMiddleware({ handleResponse: handleResponse2, getRequestHeader: getRequestHeader2, getPayload: getPayload2 })(a, {
+    path: C,
+    log: q,
+    timeout: re,
+  });
 }
 var Webhooks = class {
   sign;
@@ -54562,9 +54647,6 @@ var Webhooks = class {
 };
 const pluginNameRegex = new RegExp("^([0-9a-zA-Z-._]+)/([0-9a-zA-Z-._]+)(?::([0-9a-zA-Z-._]+))?(?:@([0-9a-zA-Z-._]+(?:/[0-9a-zA-Z-._]+)*))?$");
 const urlRegex = /^https?:\/\/\S+$/;
-function isGithubPlugin(a) {
-  return typeof a !== "string";
-}
 function githubPluginType() {
   return Type.Transform(Type.String())
     .Decode((a) => {
@@ -55171,7 +55253,7 @@ function assign_single_source(a, C) {
     return a;
   }, a);
 }
-function decode(a, C, q) {
+function utils_decode(a, C, q) {
   const re = a.replace(/\+/g, " ");
   if (q === "iso-8859-1") {
     return re.replace(/%[0-9a-f]{2}/gi, unescape);
