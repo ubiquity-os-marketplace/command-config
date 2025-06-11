@@ -1,4 +1,4 @@
-import { Context } from "../../types";
+import { Context } from "../../types/index";
 import { SuperOpenAi } from "./openai";
 import OpenAI from "openai";
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";

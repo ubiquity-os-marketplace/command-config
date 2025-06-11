@@ -6,7 +6,7 @@ import { Logs } from "@ubiquity-os/ubiquity-os-logger";
 import dotenv from "dotenv";
 import manifest from "../manifest.json";
 import { runPlugin } from "../src";
-import { Env } from "../src/types";
+import { Env } from "../src/types/index";
 import { Context } from "../src/types/context";
 import { db } from "./__mocks__/db";
 import { createComment, setupTests } from "./__mocks__/helpers";

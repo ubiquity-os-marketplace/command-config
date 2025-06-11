@@ -1,5 +1,5 @@
 import { checkUserPermissions } from "../helpers/user-permission";
-import { Context } from "../types";
+import { Context } from "../types/index";
 import { syncAgent } from "./sync-configs-agent";
 
 export async function syncConfigs(context: Context) {

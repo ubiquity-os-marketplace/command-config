@@ -4,9 +4,9 @@ import { Manifest } from "@ubiquity-os/plugin-sdk/manifest";
 import { ExecutionContext } from "hono";
 import manifest from "../manifest.json";
 import { runPlugin } from "./index";
-import { Env, envSchema, PluginSettings, pluginSettingsSchema, SupportedEvents } from "./types";
+import { Env, envSchema, PluginSettings, pluginSettingsSchema, SupportedEvents } from "./types/index";
 import { Command } from "./types/command";
-import { createAdapters } from "./adapters";
+import { createAdapters } from "./adapters/index";
 
 export default {
   async fetch(request: Request, env: Env, executionCtx?: ExecutionContext) {

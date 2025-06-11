@@ -1,5 +1,5 @@
 import { getFileContent } from "./get-file-content";
-import { Context } from "../types";
+import { Context } from "../types/index";
 import { Target } from "../types/target";
 import { applyChanges } from "./apply-changes";
 import { parseConfig } from "./validator";

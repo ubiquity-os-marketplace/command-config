@@ -1,7 +1,7 @@
 import { getFileContent } from "../helpers/get-file-content";
 import { fetchAndParseFileContent, processTargetRepos } from "../helpers/process-targets";
 import { targetBuilder } from "../helpers/target-scope";
-import { Context } from "../types";
+import { Context } from "../types/index";
 import { Manifest } from "../types/github";
 
 export async function syncAgent(editorInstruction: string, context: Context): Promise<string[]> {

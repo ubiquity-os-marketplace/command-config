@@ -1,5 +1,5 @@
 import path from "path";
-import { Context } from "../types";
+import { Context } from "../types/index";
 import { Target } from "../types/target";
 import { checkOrgPermissions, checkUserRepoPermissions } from "./user-permission";
 import { getFileContent } from "./get-file-content";

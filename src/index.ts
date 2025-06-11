@@ -1,7 +1,7 @@
 import { syncConfigs } from "./handlers/sync-config";
-import { Context } from "./types";
+import { Context } from "./types/index";
 import { isCommentEvent } from "./types/typeguards";
-import { createAdapters } from "./adapters";
+import { createAdapters } from "./adapters/index";
 import OpenAI from "openai";
 
 /**

@@ -1,4 +1,4 @@
-import { Context } from "../types";
+import { Context } from "../types/index";
 
 export async function checkUserRepoPermissions(context: Context, owner: string, repo: string): Promise<boolean> {
   const { octokit, logger } = context;
