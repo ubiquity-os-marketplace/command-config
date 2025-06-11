@@ -54843,8 +54843,8 @@ async function fetchAndParseFileContent(a, C, q) {
   const lt = await fetchManifests(ae, Ue, a);
   return { currentFileContents: re, manifests: lt };
 }
-var external_path_ = __nccwpck_require__(6928);
-var external_path_default = __nccwpck_require__.n(external_path_);
+const external_node_path_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:path");
+var external_node_path_default = __nccwpck_require__.n(external_node_path_namespaceObject);
 async function processBaseTargets(a) {
   const { config: C, logger: q } = a;
   const re = {};
@@ -54861,7 +54861,7 @@ async function processBaseTargets(a) {
       type: re.type || "main",
       owner: lt,
       repo: Pt,
-      localDir: external_path_default().join(lt, Pt),
+      localDir: external_node_path_default().join(lt, Pt),
       url: re.name,
       filePath: re.type === "dev" ? C.devConfigPath : C.configPath,
       readonly: !Wt,
@@ -54894,7 +54894,7 @@ async function processRepoConfigs(a, C) {
         type: "config",
         owner: Ue,
         repo: lt,
-        localDir: external_path_default().join(Ue, lt),
+        localDir: external_node_path_default().join(Ue, lt),
         url: `https://github.com/${Ue}/${lt}.git`,
         filePath: re.configPath,
         readonly: false,
@@ -54906,7 +54906,7 @@ async function processRepoConfigs(a, C) {
         type: "dev",
         owner: Ue,
         repo: lt,
-        localDir: external_path_default().join(Ue, lt),
+        localDir: external_node_path_default().join(Ue, lt),
         url: `https://github.com/${Ue}/${lt}.git`,
         filePath: re.devConfigPath,
         readonly: false,
@@ -54933,7 +54933,7 @@ async function processOrgConfig(a, C) {
       type: "config",
       owner: Ue,
       repo: ".ubiquity-os",
-      localDir: external_path_default().join(Ue, ".ubiquity-os"),
+      localDir: external_node_path_default().join(Ue, ".ubiquity-os"),
       url: `https://github.com/${Ue}/.ubiquity-os.git`,
       filePath: re.configPath,
       readonly: !lt,
