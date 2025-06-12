@@ -1,10 +1,7 @@
 {
   "name": "command-config",
   "description": "Edits UbiquityOS configuration files based on natural language queries.",
-  "ubiquity:listeners": [
-    "issue_comment.created",
-    "pull_request_review_comment.created"
-  ],
+  "ubiquity:listeners": ["issue_comment.created", "pull_request_review_comment.created"],
   "commands": {
     "config": {
       "ubiquity:example": "/config <editor_instruction>",
@@ -74,5 +71,5 @@
       }
     }
   },
-  "homepage_url": "https://command-config-development.deno.dev"
+  "homepage_url": "https://command-config-development.ubiquity.workers.dev"
 }
