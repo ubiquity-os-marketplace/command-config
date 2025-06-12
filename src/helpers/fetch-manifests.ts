@@ -1,5 +1,5 @@
 import { Manifest, PluginLocation } from "../types/github";
-import { Context } from "../types";
+import { Context } from "../types/index";
 
 export async function fetchManifests(pluginLocations: PluginLocation[], manifestCache: Record<string, Manifest>, context: Context): Promise<Manifest[]> {
   const manifests: Manifest[] = [];

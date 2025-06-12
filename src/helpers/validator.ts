@@ -1,7 +1,7 @@
 import { Value } from "@sinclair/typebox/value";
 import { YAMLError } from "yaml";
 import yaml from "js-yaml";
-import { Context } from "../types";
+import { Context } from "../types/index";
 import { PluginConfiguration, configSchema, configSchemaValidator } from "../config/plugin-schema";
 
 export function parseConfig(yamlContent: string, logger: Context["logger"]): PluginLocation[] {

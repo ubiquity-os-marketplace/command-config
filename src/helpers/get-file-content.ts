@@ -1,4 +1,4 @@
-import { Context } from "../types";
+import { Context } from "../types/index";
 
 export async function getFileContent(context: Context, owner: string, repo: string, path: string): Promise<string | undefined> {
   const { octokit, logger } = context;

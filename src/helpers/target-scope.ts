@@ -1,8 +1,8 @@
-import path from "path";
-import { Context } from "../types";
+import path from "node:path";
+import { Context } from "../types/index";
 import { Target } from "../types/target";
-import { checkOrgPermissions, checkUserRepoPermissions } from "./user-permission";
 import { getFileContent } from "./get-file-content";
+import { checkOrgPermissions, checkUserRepoPermissions } from "./user-permission";
 
 async function processBaseTargets(context: Context): Promise<Record<string, Target>> {
   const { config, logger } = context;

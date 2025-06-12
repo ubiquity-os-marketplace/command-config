@@ -13,10 +13,6 @@ export type GithubPlugin = {
 
 const urlRegex = /^https?:\/\/\S+$/;
 
-export function isGithubPlugin(plugin: string | GithubPlugin): plugin is GithubPlugin {
-  return typeof plugin !== "string";
-}
-
 /**
  * Transforms the string into a plugin object if the string is not an url
  */
@@ -64,8 +60,6 @@ const pluginChainSchema = T.Array(
   }),
   { minItems: 1, default: [] }
 );
-
-export type PluginChain = StaticDecode<typeof pluginChainSchema>;
 
 const handlerSchema = T.Array(
   T.Object({

@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { Context } from "../../types";
+import { Context } from "../../types/index";
 
 export class SuperOpenAi {
   protected client: OpenAI;

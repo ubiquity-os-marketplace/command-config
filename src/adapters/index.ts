@@ -1,4 +1,4 @@
-import { Context } from "../types";
+import { Context } from "../types/index";
 import { SuperOpenAi } from "./openai/openai";
 import { GitAdapter } from "./git/git";
 import { PullRequest } from "./git/super/actions/pull-request";
