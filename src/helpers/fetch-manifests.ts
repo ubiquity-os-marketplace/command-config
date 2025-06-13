@@ -1,3 +1,4 @@
+import { Buffer } from "node:buffer";
 import { Manifest, PluginLocation } from "../types/github";
 import { Context } from "../types/index";
 

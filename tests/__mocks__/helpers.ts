@@ -1,3 +1,4 @@
+import { Buffer } from "node:buffer";
 import { db } from "./db";
 import issueTemplate from "./issue-template";
 import { STRINGS } from "./strings";
