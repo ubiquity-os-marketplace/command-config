@@ -1,9 +1,9 @@
-import { Context } from "../../types/index";
-import { SuperOpenAi } from "./openai";
 import OpenAI from "openai";
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 import { validateYamlContent } from "../../helpers/validator";
 import { Manifest } from "../../types/github";
+import { Context } from "../../types/index";
+import { SuperOpenAi } from "./openai";
 
 export interface Answer {
   text: string;
