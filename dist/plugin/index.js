@@ -54917,31 +54917,43 @@ async function processRepoConfigs(a, C) {
   }
   return { repoConfig: Pt, repoDevConfig: Wt };
 }
+async function getConfig(a, C, q, re) {
+  try {
+    const ae = await getFileContent(a, C, q, re);
+    return { content: ae, configPath: re };
+  } catch {
+    return null;
+  }
+}
 async function processOrgConfig(a, C) {
   const { payload: q, config: re, logger: ae } = a;
   const Ue = q.repository.owner.login || (q.organization && q.organization.login);
+  let lt = re.configPath;
   if (!Ue) {
     throw ae.error("Organization not found in payload.");
   }
   try {
-    const q = await getFileContent(a, Ue, ".ubiquity-os", re.configPath);
-    if (!q) {
+    const q = (await Promise.all([getConfig(a, Ue, ".ubiquity-os", re.devConfigPath), getConfig(a, Ue, ".ubiquity-os", re.configPath)]))
+      .filter((a) => !!a)
+      .shift();
+    if (!q?.content) {
       ae.info("No configuration found at repository or organization level.");
       return;
     }
-    const lt = await checkOrgPermissions(a, Ue, ".ubiquity-os");
-    const Pt = {
+    const Pt = await checkOrgPermissions(a, Ue, ".ubiquity-os");
+    lt = q.configPath;
+    const Wt = {
       type: "config",
       owner: Ue,
       repo: ".ubiquity-os",
       localDir: external_node_path_default().join(Ue, ".ubiquity-os"),
       url: `https://github.com/${Ue}/.ubiquity-os.git`,
-      filePath: re.configPath,
-      readonly: !lt,
+      filePath: lt,
+      readonly: !Pt,
     };
-    C[buildIdForTarget(Pt)] = Pt;
+    C[buildIdForTarget(Wt)] = Wt;
   } catch (a) {
-    ae.info(`Organization config file not found: ${Ue}/.ubiquity-os/${re.configPath}. Error: ${a instanceof Error ? a.message : String(a)}`);
+    ae.info(`Organization config file not found: ${Ue}/.ubiquity-os/${lt}. Error: ${a instanceof Error ? a.message : String(a)}`);
   }
 }
 async function targetBuilder(a) {

@@ -96,9 +96,19 @@ async function processRepoConfigs(
   return { repoConfig, repoDevConfig };
 }
 
+async function getConfig(context: Context, orgName: string, repoName: string, configPath: string) {
+  try {
+    const content = await getFileContent(context, orgName, repoName, configPath);
+    return { content, configPath };
+  } catch {
+    return null;
+  }
+}
+
 async function processOrgConfig(context: Context, targetMap: Record<string, Target>): Promise<void> {
   const { payload, config, logger } = context;
   const orgName = payload.repository.owner.login || (payload.organization && payload.organization.login);
+  let filePath = config.configPath;
 
   if (!orgName) {
     throw logger.error("Organization not found in payload.");
@@ -106,28 +116,32 @@ async function processOrgConfig(context: Context, targetMap: Record<string, Targ
 
   try {
     // Try to get org level configs
-    const orgConfig = await getFileContent(context, orgName, ".ubiquity-os", config.configPath);
-    if (!orgConfig) {
+    const orgConfig = (
+      await Promise.all([getConfig(context, orgName, ".ubiquity-os", config.devConfigPath), getConfig(context, orgName, ".ubiquity-os", config.configPath)])
+    )
+      .filter((o) => !!o)
+      .shift();
+
+    if (!orgConfig?.content) {
       logger.info("No configuration found at repository or organization level.");
       return;
     }
 
     const hasOrgPermission = await checkOrgPermissions(context, orgName, ".ubiquity-os");
+    filePath = orgConfig.configPath;
     const orgRepoTarget: Target = {
       type: "config",
       owner: orgName,
       repo: ".ubiquity-os",
       localDir: path.join(orgName, ".ubiquity-os"),
       url: `https://github.com/${orgName}/.ubiquity-os.git`,
-      filePath: config.configPath,
+      filePath,
       readonly: !hasOrgPermission,
     };
 
     targetMap[buildIdForTarget(orgRepoTarget)] = orgRepoTarget;
   } catch (error: unknown) {
-    logger.info(
-      `Organization config file not found: ${orgName}/.ubiquity-os/${config.configPath}. Error: ${error instanceof Error ? error.message : String(error)}`
-    );
+    logger.info(`Organization config file not found: ${orgName}/.ubiquity-os/${filePath}. Error: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
