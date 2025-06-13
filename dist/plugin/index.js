@@ -23901,8 +23901,8 @@ var __webpack_modules__ = {
       kLocalAddress: Sn,
       kMaxResponseSize: Fn,
       kHTTPConnVersion: Dn,
-      kHost: kn,
-      kHTTP2Session: On,
+      kHost: On,
+      kHTTP2Session: kn,
       kHTTP2SessionState: Pn,
       kHTTP2BuildRequest: Nn,
       kHTTP2CopyHeaders: Un,
@@ -24072,9 +24072,9 @@ var __webpack_modules__ = {
         this[Kn] = null;
         this[Fn] = Kr > -1 ? Kr : -1;
         this[Dn] = "h1";
-        this[On] = null;
+        this[kn] = null;
         this[Pn] = !Zr ? null : { openStreams: 0, maxConcurrentStreams: en != null ? en : 100 };
-        this[kn] = `${this[Vr].hostname}${this[Vr].port ? `:${this[Vr].port}` : ""}`;
+        this[On] = `${this[Vr].hostname}${this[Vr].port ? `:${this[Vr].port}` : ""}`;
         this[rn] = [];
         this[pn] = 0;
         this[cn] = 0;
@@ -24145,9 +24145,9 @@ var __webpack_modules__ = {
             }
             C();
           };
-          if (this[On] != null) {
-            Pt.destroy(this[On], a);
-            this[On] = null;
+          if (this[kn] != null) {
+            Pt.destroy(this[kn], a);
+            this[kn] = null;
             this[Pn] = null;
           }
           if (!this[mn]) {
@@ -24179,7 +24179,7 @@ var __webpack_modules__ = {
       const C = this[Yr];
       const q = new Nr(`HTTP/2: "GOAWAY" frame received with code ${a}`);
       C[mn] = null;
-      C[On] = null;
+      C[kn] = null;
       if (C.destroyed) {
         re(this[Zr] === 0);
         const a = C[rn].splice(C[pn]);
@@ -24737,8 +24737,8 @@ var __webpack_modules__ = {
           C.on("goaway", onHTTP2GoAway);
           C.on("close", onSocketClose);
           C.unref();
-          a[On] = C;
-          ae[On] = C;
+          a[kn] = C;
+          ae[kn] = C;
         } else {
           if (!es) {
             es = await ts;
@@ -24871,7 +24871,7 @@ var __webpack_modules__ = {
         if (a[sn]) {
           return;
         }
-        if (!q && !a[On]) {
+        if (!q && !a[kn]) {
           connect(a);
           return;
         }
@@ -24899,7 +24899,7 @@ var __webpack_modules__ = {
     }
     function write(a, C) {
       if (a[Dn] === "h2") {
-        writeH2(a, a[On], C);
+        writeH2(a, a[kn], C);
         return;
       }
       const { body: q, method: ae, path: Ue, host: lt, upgrade: Wt, headers: Ar, blocking: Er, reset: Br } = C;
@@ -25029,7 +25029,7 @@ var __webpack_modules__ = {
       }
       let Pr;
       const Ur = a[Pn];
-      kr[xn] = Wt || a[kn];
+      kr[xn] = Wt || a[On];
       kr[Gn] = Ue;
       if (Ue === "CONNECT") {
         C.ref();
@@ -25105,7 +25105,7 @@ var __webpack_modules__ = {
         }
       });
       Pr.once("error", function (C) {
-        if (a[On] && !a[On].destroyed && !this.closed && !this.destroyed) {
+        if (a[kn] && !a[kn].destroyed && !this.closed && !this.destroyed) {
           Ur.streams -= 1;
           Pt.destroy(Pr, C);
         }
@@ -25113,7 +25113,7 @@ var __webpack_modules__ = {
       Pr.once("frameError", (C, re) => {
         const ae = new Nr(`HTTP/2: "frameError" received - type ${C}, code ${re}`);
         errorRequest(a, q, ae);
-        if (a[On] && !a[On].destroyed && !this.closed && !this.destroyed) {
+        if (a[kn] && !a[kn].destroyed && !this.closed && !this.destroyed) {
           Ur.streams -= 1;
           Pt.destroy(Pr, ae);
         }
@@ -28612,8 +28612,8 @@ var __webpack_modules__ = {
     const { getGlobalDispatcher: Sn } = q(2581);
     const { webidl: Fn } = q(4222);
     const { STATUS_CODES: Dn } = q(8611);
-    const kn = ["GET", "HEAD"];
-    let On;
+    const On = ["GET", "HEAD"];
+    let kn;
     let Pn = globalThis.ReadableStream;
     class Fetch extends In {
       constructor(a) {
@@ -28913,14 +28913,14 @@ var __webpack_modules__ = {
           return Promise.resolve(ae("about scheme is not supported"));
         }
         case "blob:": {
-          if (!On) {
-            On = q(181).resolveObjectURL;
+          if (!kn) {
+            kn = q(181).resolveObjectURL;
           }
           const a = Ur(C);
           if (a.search.length !== 0) {
             return Promise.resolve(ae("NetworkError when attempting to fetch resource."));
           }
-          const re = On(a.toString());
+          const re = kn(a.toString());
           if (C.method !== "GET" || !Wr(re)) {
             return Promise.resolve(ae("invalid method"));
           }
@@ -29078,7 +29078,7 @@ var __webpack_modules__ = {
       if (re.status !== 303 && q.body != null && q.body.source == null) {
         return Promise.resolve(ae());
       }
-      if (([301, 302].includes(re.status) && q.method === "POST") || (re.status === 303 && !kn.includes(q.method))) {
+      if (([301, 302].includes(re.status) && q.method === "POST") || (re.status === 303 && !On.includes(q.method))) {
         q.method = "GET";
         q.body = null;
         for (const a of fn) {
@@ -41975,21 +41975,21 @@ var Context = class {
   #S = true;
   #F;
   #D;
-  #k;
-  #h;
   #O;
+  #h;
+  #k;
   constructor(a, C) {
     this.#b = a;
     if (C) {
       this.#Q = C.executionCtx;
       this.env = C.env;
-      this.#k = C.notFoundHandler;
-      this.#O = C.path;
+      this.#O = C.notFoundHandler;
+      this.#k = C.path;
       this.#h = C.matchResult;
     }
   }
   get req() {
-    this.#_ ??= new HonoRequest(this.#b, this.#O, this.#h);
+    this.#_ ??= new HonoRequest(this.#b, this.#k, this.#h);
     return this.#_;
   }
   get event() {
@@ -42179,8 +42179,8 @@ var Context = class {
     return this.newResponse(null, C ?? 302);
   };
   notFound = () => {
-    this.#k ??= () => new Response();
-    return this.#k(this);
+    this.#O ??= () => new Response();
+    return this.#O(this);
   };
 };
 var compose = (a, C, q) => (re, ae) => {
@@ -42253,29 +42253,29 @@ var hono_base_Hono = class {
   router;
   getPath;
   _basePath = "/";
-  #O = "/";
+  #k = "/";
   routes = [];
   constructor(a = {}) {
     const C = [...METHODS, METHOD_NAME_ALL_LOWERCASE];
     C.forEach((a) => {
       this[a] = (C, ...q) => {
         if (typeof C === "string") {
-          this.#O = C;
+          this.#k = C;
         } else {
-          this.#N(a, this.#O, C);
+          this.#N(a, this.#k, C);
         }
         q.forEach((C) => {
-          this.#N(a, this.#O, C);
+          this.#N(a, this.#k, C);
         });
         return this;
       };
     });
     this.on = (a, C, ...q) => {
       for (const re of [C].flat()) {
-        this.#O = re;
+        this.#k = re;
         for (const C of [a].flat()) {
           q.map((a) => {
-            this.#N(C.toUpperCase(), this.#O, a);
+            this.#N(C.toUpperCase(), this.#k, a);
           });
         }
       }
@@ -42283,13 +42283,13 @@ var hono_base_Hono = class {
     };
     this.use = (a, ...C) => {
       if (typeof a === "string") {
-        this.#O = a;
+        this.#k = a;
       } else {
-        this.#O = "*";
+        this.#k = "*";
         C.unshift(a);
       }
       C.forEach((a) => {
-        this.#N(METHOD_NAME_ALL, this.#O, a);
+        this.#N(METHOD_NAME_ALL, this.#k, a);
       });
       return this;
     };
@@ -42303,7 +42303,7 @@ var hono_base_Hono = class {
     a.routes = this.routes;
     return a;
   }
-  #k = notFoundHandler;
+  #O = notFoundHandler;
   errorHandler = errorHandler;
   route(a, C) {
     const q = this.basePath(a);
@@ -42329,7 +42329,7 @@ var hono_base_Hono = class {
     return this;
   };
   notFound = (a) => {
-    this.#k = a;
+    this.#O = a;
     return this;
   };
   mount(a, C, q) {
@@ -42393,19 +42393,19 @@ var hono_base_Hono = class {
     }
     const ae = this.getPath(a, { env: q });
     const Ue = this.router.match(re, ae);
-    const lt = new Context(a, { path: ae, matchResult: Ue, env: q, executionCtx: C, notFoundHandler: this.#k });
+    const lt = new Context(a, { path: ae, matchResult: Ue, env: q, executionCtx: C, notFoundHandler: this.#O });
     if (Ue[0].length === 1) {
       let a;
       try {
         a = Ue[0][0][0][0](lt, async () => {
-          lt.res = await this.#k(lt);
+          lt.res = await this.#O(lt);
         });
       } catch (a) {
         return this.#L(a, lt);
       }
-      return a instanceof Promise ? a.then((a) => a || (lt.finalized ? lt.res : this.#k(lt))).catch((a) => this.#L(a, lt)) : (a ?? this.#k(lt));
+      return a instanceof Promise ? a.then((a) => a || (lt.finalized ? lt.res : this.#O(lt))).catch((a) => this.#L(a, lt)) : (a ?? this.#O(lt));
     }
-    const Pt = compose(Ue[0], this.errorHandler, this.#k);
+    const Pt = compose(Ue[0], this.errorHandler, this.#O);
     return (async () => {
       try {
         const a = await Pt(lt);
@@ -50708,6 +50708,7 @@ async function checkOrgPermissions(a, C, q) {
   ae.info(`User ${lt} is a member of ${C}: ${Wt.headers.status === "204"}: ${Wt.data}`);
   return Wt.status !== 302;
 }
+const external_node_buffer_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:buffer");
 async function getFileContent(a, C, q, re) {
   const { octokit: ae, logger: Ue } = a;
   const lt = await ae.rest.repos.getContent({ owner: C, repo: q, path: re });
@@ -50715,7 +50716,7 @@ async function getFileContent(a, C, q, re) {
   if (Array.isArray(lt.data) || !("content" in lt.data)) {
     throw Ue.error(`File content not available for: ${re}`);
   }
-  return Buffer.from(lt.data.content, "base64").toString("utf-8");
+  return external_node_buffer_namespaceObject.Buffer.from(lt.data.content, "base64").toString("utf-8");
 }
 async function applyChanges(a, C, q, re) {
   try {
@@ -54795,7 +54796,7 @@ async function fetchManifest(a, C, q) {
     let a;
     const Pt = await q.octokit.rest.repos.getContent({ owner: re, repo: ae, path: "manifest.json", ref: Ue });
     if ("content" in Pt.data) {
-      a = Buffer.from(Pt.data.content, "base64").toString("utf8");
+      a = external_node_buffer_namespaceObject.Buffer.from(Pt.data.content, "base64").toString("utf8");
     } else {
       throw new Error("Not a file content response");
     }
@@ -55072,7 +55073,7 @@ class PullRequest extends GitSuper {
       const { data: Er } = await this._context.octokit.rest.git.getRef({ owner: ae, repo: Ue, ref: `heads/${Pt}` });
       await this._context.octokit.rest.git.createRef({ owner: ae, repo: Ue, ref: `refs/heads/${Ar}`, sha: Er.object.sha });
       this._context.logger.info(`Branch Created with name: ${Ar}`);
-      const Ir = Buffer.from(C).toString("base64");
+      const Ir = external_node_buffer_namespaceObject.Buffer.from(C).toString("base64");
       this._context.logger.info(`New content: ${Ir}`);
       const { data: Br } = await this._context.octokit.rest.repos.getContent({ owner: ae, repo: Ue, path: lt, ref: Ar });
       const Qr = "sha" in Br ? Br.sha : "";
