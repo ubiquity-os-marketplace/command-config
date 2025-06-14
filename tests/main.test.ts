@@ -74,7 +74,7 @@ describe("Plugin tests", () => {
         expect(error).toBeDefined();
       }
       const comments = db.issueComments.getAll();
-      expect(comments.length).toBe(1); // No new comment should be created
+      expect(comments.length).toBe(2); // One more comment should be created containing the error
     });
   });
 });
