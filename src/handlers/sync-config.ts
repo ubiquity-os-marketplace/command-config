@@ -3,7 +3,7 @@ import { Context } from "../types/index";
 import { syncAgent } from "./sync-configs-agent";
 
 export async function syncConfigs(context: Context) {
-  const { payload, logger, eventName } = context;
+  const { payload, logger, eventName, commentHandler } = context;
 
   if (payload.comment.user?.type === "Bot") {
     throw logger.error("Comment is from a bot. Skipping.");
@@ -12,7 +12,9 @@ export async function syncConfigs(context: Context) {
   // Fetch the Editor Instruction
   const extractedInstructions = extractEditorInstruction(context);
   if (!extractedInstructions) {
-    return { status: 200, reason: logger.info("No editor instruction found in comment. Skipping.").logMessage.raw };
+    const errorMessage = logger.info("No editor instruction found in comment. Skipping.");
+    await commentHandler.postComment(context, errorMessage);
+    return { status: 200, reason: errorMessage.logMessage.raw };
   }
   const { editorInstruction } = extractedInstructions;
 
@@ -26,13 +28,15 @@ export async function syncConfigs(context: Context) {
   // Check user permissions before proceeding allow only if (admin || write)
   // eslint-disable-next-line
   // TODO: Handle Privacy Settings for user
-  if ((await checkUserPermissions(context)) === false) {
+  if (!(await checkUserPermissions(context))) {
     throw logger.error("User does not have the required permissions. Skipping.");
   }
 
   const prUrls = await syncAgent(editorInstruction, context);
   if (prUrls.length === 0) {
-    return { status: 200, reason: logger.info("No pull requests created.").logMessage.raw };
+    const errorMessage = logger.info("No pull requests was created.");
+    await commentHandler.postComment(context, errorMessage);
+    return { status: 200, reason: errorMessage.logMessage.raw };
   } else {
     const prList = prUrls
       .map((url) => {

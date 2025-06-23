@@ -8,7 +8,7 @@ import OpenAI from "openai";
  * The main plugin function. Split for easier testing.
  */
 export async function runPlugin(context: Context) {
-  const { logger, config, eventName, env } = context;
+  const { logger, config, eventName, env, commentHandler } = context;
 
   // Create Clients
   const openai = new OpenAI({
@@ -20,6 +20,7 @@ export async function runPlugin(context: Context) {
   context.adapters = createAdapters(openai, context);
 
   if (isCommentEvent(context)) {
+    await commentHandler.postComment(context, logger.info("Processing configuration change request..."));
     return await syncConfigs(context);
   }
 
