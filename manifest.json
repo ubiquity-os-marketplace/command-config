@@ -1,6 +1,7 @@
 {
   "name": "command-config",
   "description": "Edits UbiquityOS configuration files based on natural language queries.",
+  "ubiquity:listeners": [],
   "commands": {
     "config": {
       "ubiquity:example": "/config <editor_instruction>",
