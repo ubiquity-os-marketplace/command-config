@@ -1,3 +1,4 @@
+import prettier from "prettier";
 import { Manifest } from "../types/github";
 import { Context } from "../types/index";
 import { Target } from "../types/target";
@@ -27,13 +28,15 @@ export async function processTargetRepos(
   context.logger.info(`Updated file contents: ${JSON.stringify(llmResponse)}`);
   const updatedFileContents = llmResponse.text;
 
-  // Format YAML using Prettier CLI before PR creation
+  // Format YAML using Prettier before PR creation
   let formattedFileContents = updatedFileContents;
   try {
-    const { execSync } = await import("node:child_process");
-    formattedFileContents = execSync(`prettier --config .prettierrc --parser yaml`, { input: updatedFileContents }).toString();
-  } catch {
-    context.logger.warn("Prettier formatting failed, using unformatted YAML.");
+    formattedFileContents = await prettier.format(updatedFileContents, {
+      parser: "yaml",
+      ...((await prettier.resolveConfig(".prettierrc")) || {}),
+    });
+  } catch (err) {
+    context.logger.warn("Prettier formatting failed, using unformatted YAML.", { err, content: updatedFileContents });
   }
 
   // Detect no change and post a warning if needed

@@ -32,6 +32,7 @@ KEY INSTRUCTIONS:
 2. Validate the modified YAML against the parser code provided below
 3. Use the provided manifests to understand valid property names and default values
 4. **Do not alter any URLs in the configuration unless explicitly instructed**
+5. Do NOT remove any comments from the YAML configuration. All comments, including documentation and inline notes, must be preserved exactly as in the original file. Only remove or alter comments if specifically instructed to do so.
 
 Here is the original YAML configuration file for ${repoUrl}:`,
 
@@ -60,6 +61,7 @@ PLUGIN INSTRUCTIONS:
 FORMATTING REQUIREMENTS:
 - Preserve all indentation and spacing conventions from the original file
 - Keep all comments intended for human readers—including any URLs within them
+- Do NOT remove or alter any comments unless specifically instructed (this includes documentation, inline, and block comments)
 - Only remove commented-out YAML code if specifically instructed
 - Do not remove or alter any documentation comments or URLs
 - If adding new properties, refer to the manifests for proper names and default values
