@@ -34,6 +34,11 @@
         "default": ".github/.ubiquity-os.config.dev.yml",
         "type": "string"
       },
+      "model": {
+        "default": "deepseek/deepseek-r1-0528:free",
+        "examples": ["deepseek/deepseek-r1-0528:free", "anthropic/claude-3.7-sonnet", "openai/gpt-4o"],
+        "type": "string"
+      },
       "defaultTargets": {
         "default": [
           {
