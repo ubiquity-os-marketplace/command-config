@@ -13,6 +13,10 @@ export const pluginSettingsSchema = T.Object(
     parserPath: T.String({ default: "https://github.com/ubiquity-os/ubiquity-os-kernel.git" }),
     configPath: T.String({ default: ".github/.ubiquity-os.config.yml" }),
     devConfigPath: T.String({ default: ".github/.ubiquity-os.config.dev.yml" }),
+    model: T.String({
+      default: "deepseek/deepseek-r1-0528:free",
+      examples: ["deepseek/deepseek-r1-0528:free", "anthropic/claude-3.7-sonnet", "openai/gpt-4o"],
+    }),
     defaultTargets: T.Array(
       T.Object({
         name: T.String({ default: "https://github.com/ubiquity-os/.ubiquity-os.git" }),

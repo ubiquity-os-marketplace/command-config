@@ -1,10 +1,10 @@
-import { getFileContent } from "./get-file-content";
+import { Manifest } from "../types/github";
 import { Context } from "../types/index";
 import { Target } from "../types/target";
 import { applyChanges } from "./apply-changes";
-import { parseConfig } from "./validator";
-import { Manifest } from "../types/github";
 import { fetchManifests } from "./fetch-manifests";
+import { getFileContent } from "./get-file-content";
+import { parseConfig } from "./validator";
 
 export async function processTargetRepos(
   target: Target,
@@ -27,7 +27,22 @@ export async function processTargetRepos(
   context.logger.info(`Updated file contents: ${JSON.stringify(llmResponse)}`);
   const updatedFileContents = llmResponse.text;
 
-  const { pullRequestUrl } = await applyChanges(target, updatedFileContents, context, editorInstruction);
+  // Format YAML using Prettier CLI before PR creation
+  let formattedFileContents = updatedFileContents;
+  try {
+    const { execSync } = await import("node:child_process");
+    formattedFileContents = execSync(`prettier --config .prettierrc --parser yaml`, { input: updatedFileContents }).toString();
+  } catch {
+    context.logger.warn("Prettier formatting failed, using unformatted YAML.");
+  }
+
+  // Detect no change and post a warning if needed
+  if (formattedFileContents.trim() === currentFileContents.trim()) {
+    await context.commentHandler.postComment(context, context.logger.warn("No change was triggered by the instruction."));
+    return undefined;
+  }
+
+  const { pullRequestUrl } = await applyChanges(target, formattedFileContents, context, editorInstruction);
   context.logger.info(`Pull request created: ${pullRequestUrl}`);
   return pullRequestUrl;
 }

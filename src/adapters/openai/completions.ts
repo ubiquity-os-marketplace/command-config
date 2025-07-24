@@ -109,7 +109,7 @@ ${JSON.stringify(manifest)}
       }
 
       const response = await this.client.chat.completions.create({
-        model: "anthropic/claude-3.7-sonnet",
+        model: this.context.config.model,
         max_tokens: 4000,
         temperature: attempts > 1 ? 0.2 : 0,
         messages,
