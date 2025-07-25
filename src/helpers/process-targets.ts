@@ -7,6 +7,15 @@ import { fetchManifests } from "./fetch-manifests";
 import { getFileContent } from "./get-file-content";
 import { parseConfig } from "./validator";
 
+function extractYamlOnly(text: string): string {
+  text = text.replace(/^```yaml[\r\n]?/i, "").replace(/```$/i, "");
+  const yamlStart = text.search(/^[a-zA-Z0-9_-]+:/m);
+  if (yamlStart > 0) {
+    text = text.slice(yamlStart);
+  }
+  return text.trim();
+}
+
 export async function processTargetRepos(
   target: Target,
   parserCode: string,
@@ -26,7 +35,8 @@ export async function processTargetRepos(
 
   // Log the updated file contents
   context.logger.info(`Updated file contents: ${JSON.stringify(llmResponse)}`);
-  const updatedFileContents = llmResponse.text;
+
+  const updatedFileContents = extractYamlOnly(llmResponse.text);
 
   // Format YAML using Prettier before PR creation
   let formattedFileContents = updatedFileContents;
@@ -39,9 +49,8 @@ export async function processTargetRepos(
     context.logger.warn("Prettier formatting failed, using unformatted YAML.", { err, content: updatedFileContents });
   }
 
-  // Detect no change and post a warning if needed
   if (formattedFileContents.trim() === currentFileContents.trim()) {
-    await context.commentHandler.postComment(context, context.logger.warn("No change was triggered by the instruction."));
+    context.logger.warn("No change was triggered by the instruction.");
     return undefined;
   }
 

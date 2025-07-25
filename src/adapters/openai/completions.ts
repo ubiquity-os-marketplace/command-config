@@ -39,6 +39,7 @@ Here is the original YAML configuration file for ${repoUrl}:`,
       originalContent,
 
       `Provide only the modified YAML content without any additional explanation, headers, footers, code block markers, or language identifiers.
+      Your response MUST contain ONLY the YAML content. Do NOT include any explanation, headers, footers, or introductory text.
 
 When making changes to plugin configurations, maintain this structure:
 
