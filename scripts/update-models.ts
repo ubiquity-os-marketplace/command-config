@@ -29,10 +29,6 @@ async function fetchAndUpdateModels(): Promise<void> {
     const modelIds = data.data.map((model: OpenRouterModel) => model.id).sort((a, b) => a.localeCompare(b));
     console.log(`Found ${modelIds.length} models`);
 
-    const modelsFilePath = path.join(dirname, "../.models.json");
-    fs.writeFileSync(modelsFilePath, JSON.stringify(modelIds, null, 2));
-    console.log(`Models saved to ${modelsFilePath}`);
-
     const pluginInputPath = path.join(dirname, "../src/types/plugin-input.ts");
     let pluginInputContent = fs.readFileSync(pluginInputPath, "utf8");
 

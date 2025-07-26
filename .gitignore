@@ -16,7 +16,6 @@ cypress/screenshots
 script.ts
 .wrangler
 test-dashboard.md
-.models.json
 
 #vscode
 *.code-workspace
