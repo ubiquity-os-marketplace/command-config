@@ -26,7 +26,7 @@ async function fetchAndUpdateModels(): Promise<void> {
       throw new Error("Invalid response format from OpenRouter API");
     }
 
-    const modelIds = data.data.map((model: OpenRouterModel) => model.id);
+    const modelIds = data.data.map((model: OpenRouterModel) => model.id).sort((a, b) => a.localeCompare(b));
     console.log(`Found ${modelIds.length} models`);
 
     const modelsFilePath = path.join(dirname, "../.models.json");
@@ -36,8 +36,12 @@ async function fetchAndUpdateModels(): Promise<void> {
     const pluginInputPath = path.join(dirname, "../src/types/plugin-input.ts");
     let pluginInputContent = fs.readFileSync(pluginInputPath, "utf8");
 
-    const examplesRegex = /examples:\s*\[[^\]]+]/;
-    const newExamples = `examples: ${JSON.stringify(modelIds)}`;
+    const examplesRegex = /examples:\s*\[[\s\S]*?\]/;
+    const newExamples = `examples: [
+        // cspell:disable
+${modelIds.map((model) => `"${model}"`).join(",\n")},
+        // cspell:enable
+      ]`;
 
     if (examplesRegex.test(pluginInputContent)) {
       pluginInputContent = pluginInputContent.replace(examplesRegex, newExamples);
