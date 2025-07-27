@@ -62,9 +62,7 @@ PLUGIN INSTRUCTIONS:
 FORMATTING REQUIREMENTS:
 - Preserve all indentation and spacing conventions from the original file
 - Keep all comments intended for human readers—including any URLs within them
-- Do NOT remove or alter any comments unless specifically instructed (this includes documentation, inline, and block comments)
-- Only remove commented-out YAML code if specifically instructed
-- Do not remove or alter any documentation comments or URLs
+- Preserve all comments (this includes documentation, inline, and block comments) and URLs unless specifically instructed otherwise; only remove commented-out YAML code when instructed
 - If adding new properties, refer to the manifests for proper names and default values
 
 The YAML parser that will be used to validate your output is shown below. Ensure your modifications comply with this parser:`,
