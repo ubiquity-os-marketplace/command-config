@@ -25,14 +25,20 @@
 
 ```yml
 plugins:
-  - name: hello-world
-    id: hello-world
+  - name: command-config
+    id: command-config
     uses:
       - plugin: http://localhost:4000
         with:
-          # Define configurable items here and the kernel will pass these to the plugin.
-          configurableResponse: "Hello, is it me you are looking for?"
-          customStringsUrl: "https://raw.githubusercontent.com/ubiquibot/plugin-template/development/strings.json"
+          baseUrl: "https://openrouter.ai/api/v1"
+          parserPath: "https://github.com/ubiquity-os/ubiquity-os-kernel.git"
+          configPath: ".github/.ubiquity-os.config.yml"
+          devConfigPath: ".github/.ubiquity-os.config.dev.yml"
+          model: deepseek/deepseek-r1-0528:free
+          defaultTargets:
+            - name: "https://github.com/ubiquity-os/.ubiquity-os.git"
+              branch: "main"
+              type: "dev"
 ```
 
 ###### At this stage, your plugin will fire on your defined events with the required settings passed in from the kernel. You can now start writing your plugin's logic.
