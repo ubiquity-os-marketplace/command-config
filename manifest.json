@@ -37,7 +37,6 @@
       "model": {
         "default": "deepseek/deepseek-r1-0528:free",
         "examples": [
-          "01-ai/yi-large",
           "agentica-org/deepcoder-14b-preview",
           "agentica-org/deepcoder-14b-preview:free",
           "ai21/jamba-1.6-large",
@@ -59,7 +58,6 @@
           "anthropic/claude-3-sonnet",
           "anthropic/claude-3.5-haiku",
           "anthropic/claude-3.5-haiku-20241022",
-          "anthropic/claude-3.5-haiku-20241022:beta",
           "anthropic/claude-3.5-haiku:beta",
           "anthropic/claude-3.5-sonnet",
           "anthropic/claude-3.5-sonnet-20240620",
@@ -112,7 +110,6 @@
           "deepseek/deepseek-r1:free",
           "deepseek/deepseek-v3-base",
           "eleutherai/llemma_7b",
-          "eva-unit-01/eva-qwen-2.5-72b",
           "featherless/qwerky-72b:free",
           "google/gemini-2.0-flash-001",
           "google/gemini-2.0-flash-exp:free",
@@ -355,7 +352,10 @@
           "x-ai/grok-3-mini-beta",
           "x-ai/grok-4",
           "x-ai/grok-vision-beta",
-          "z-ai/glm-4-32b"
+          "z-ai/glm-4-32b",
+          "z-ai/glm-4.5",
+          "z-ai/glm-4.5-air",
+          "z-ai/glm-4.5-air:free"
         ],
         "type": "string"
       },
