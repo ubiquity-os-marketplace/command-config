@@ -93,8 +93,8 @@ export class PullRequest extends GitSuper {
     const sender = payload.comment?.user?.login || payload.sender.login;
     const commentUrl = payload.comment?.html_url;
 
-    return `> ${editorInstruction}.
+    const quoted = editorInstruction.replace(/^/gm, "> ");
 
- _Originally posted by @${sender} in ${commentUrl}_`;
+    return `${quoted}.\n\n _Originally posted by @${sender} in ${commentUrl}_`;
   }
 }
