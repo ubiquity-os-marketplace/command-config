@@ -32,12 +32,14 @@ KEY INSTRUCTIONS:
 2. Validate the modified YAML against the parser code provided below
 3. Use the provided manifests to understand valid property names and default values
 4. **Do not alter any URLs in the configuration unless explicitly instructed**
+5. Do NOT remove any comments from the YAML configuration. All comments, including documentation and inline notes, must be preserved exactly as in the original file. Only remove or alter comments if specifically instructed to do so.
 
 Here is the original YAML configuration file for ${repoUrl}:`,
 
       originalContent,
 
       `Provide only the modified YAML content without any additional explanation, headers, footers, code block markers, or language identifiers.
+      Your response MUST contain ONLY the YAML content. Do NOT include any explanation, headers, footers, or introductory text.
 
 When making changes to plugin configurations, maintain this structure:
 
@@ -60,8 +62,7 @@ PLUGIN INSTRUCTIONS:
 FORMATTING REQUIREMENTS:
 - Preserve all indentation and spacing conventions from the original file
 - Keep all comments intended for human readers—including any URLs within them
-- Only remove commented-out YAML code if specifically instructed
-- Do not remove or alter any documentation comments or URLs
+- Preserve all comments (this includes documentation, inline, and block comments) and URLs unless specifically instructed otherwise; only remove commented-out YAML code when instructed
 - If adding new properties, refer to the manifests for proper names and default values
 
 The YAML parser that will be used to validate your output is shown below. Ensure your modifications comply with this parser:`,
@@ -109,7 +110,7 @@ ${JSON.stringify(manifest)}
       }
 
       const response = await this.client.chat.completions.create({
-        model: "anthropic/claude-3.7-sonnet",
+        model: this.context.config.model,
         max_tokens: 4000,
         temperature: attempts > 1 ? 0.2 : 0,
         messages,
