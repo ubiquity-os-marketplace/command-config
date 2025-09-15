@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
+import { stripCodeFences } from "../../helpers/strip-code-fences";
 import { validateYamlContent } from "../../helpers/validator";
 import { Manifest } from "../../types/github";
 import { Context } from "../../types/index";
@@ -117,8 +118,10 @@ ${JSON.stringify(manifest)}
       });
 
       if (!response) throw this.context.logger.error("No response from API");
-      const completion = response.choices[0]?.message?.content;
-      if (!completion) throw this.context.logger.error("No completion generated");
+      const rawCompletion = response.choices[0]?.message?.content;
+      if (!rawCompletion) throw this.context.logger.error("No completion generated");
+
+      const completion = stripCodeFences(String(rawCompletion));
 
       // Validate the YAML output
       const validation = validateYamlContent(completion, this.context.logger);
