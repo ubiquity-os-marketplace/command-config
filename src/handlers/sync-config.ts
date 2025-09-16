@@ -34,7 +34,7 @@ export async function syncConfigs(context: Context) {
 
   const prUrls = await syncAgent(editorInstruction, context);
   if (prUrls.length === 0) {
-    const errorMessage = logger.info("No pull requests was created.");
+    const errorMessage = logger.warn("No pull requests was created.");
     await commentHandler.postComment(context, errorMessage);
     return { status: 200, reason: errorMessage.logMessage.raw };
   } else {
