@@ -119,7 +119,7 @@ ${JSON.stringify(manifest)}
 
       if (!response) throw this.context.logger.error("No response from API");
       const rawCompletion = response.choices[0]?.message?.content;
-      if (!rawCompletion) throw this.context.logger.error("No completion generated");
+      if (!rawCompletion) throw this.context.logger.warn("No completion generated");
 
       const completion = stripCodeFences(String(rawCompletion));
 
