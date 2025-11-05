@@ -2,8 +2,8 @@ import { fetchOrganizationManifests } from "../helpers/fetch-organization-manife
 import { getFileContent } from "../helpers/get-file-content";
 import { fetchAndParseFileContent, processTargetRepos } from "../helpers/process-targets";
 import { targetBuilder } from "../helpers/target-scope";
-import { Context } from "../types/index";
 import { Manifest } from "../types/github";
+import { Context } from "../types/index";
 
 export async function syncAgent(editorInstruction: string, context: Context): Promise<string[]> {
   const { logger, config } = context;

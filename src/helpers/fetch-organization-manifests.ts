@@ -1,5 +1,5 @@
-import { Context } from "../types/index";
 import { Manifest, PluginLocation } from "../types/github";
+import { Context } from "../types/index";
 import { fetchManifests } from "./fetch-manifests";
 
 export async function fetchOrganizationManifests(context: Context, organization: string, manifestCache: Record<string, Manifest>): Promise<void> {
