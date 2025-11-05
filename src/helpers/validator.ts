@@ -2,7 +2,7 @@ import { Value } from "@sinclair/typebox/value";
 import { YAMLError } from "yaml";
 import yaml from "js-yaml";
 import { Context } from "../types/index";
-import { PluginConfiguration, configSchema, configSchemaValidator } from "../config/plugin-schema";
+import { PluginConfiguration, configSchema, configSchemaValidator, pluginNameRegex, urlRegex } from "../config/plugin-schema";
 
 export function parseConfig(yamlContent: string, logger: Context["logger"]): PluginLocation[] {
   try {
@@ -58,6 +58,21 @@ export function parseYaml(data: null | string, logger: Context["logger"]) {
 
 export type PluginLocation = string | { owner: string; repo: string; ref?: string };
 
+export function parsePluginIdentifier(value: string): string | PluginLocation {
+  if (urlRegex.test(value)) {
+    return value;
+  }
+  const matches = RegExp(pluginNameRegex).exec(value);
+  if (!matches) {
+    throw new Error(`Invalid plugin name: ${value}`);
+  }
+  return {
+    owner: matches[1],
+    repo: matches[2],
+    ref: matches[4] || undefined,
+  };
+}
+
 export function parsePluginLocations(yamlContent: string, logger: Context["logger"]): PluginLocation[] {
   const { yaml: parsedYaml, errors } = parseYaml(yamlContent, logger);
   if (errors) {
@@ -66,31 +81,8 @@ export function parsePluginLocations(yamlContent: string, logger: Context["logge
   }
 
   const plugins = (parsedYaml as PluginConfiguration)?.plugins || [];
-  return plugins.flatMap(
-    (plugin) =>
-      plugin.uses?.flatMap((use): PluginLocation[] => {
-        if (typeof use === "string") {
-          return [use];
-        }
 
-        if (use && typeof use.plugin === "string") {
-          const plugin = use.plugin;
-          if (plugin.startsWith("http")) {
-            return [`${plugin}/manifest.json`];
-          }
-
-          const parts = plugin.split("/");
-          if (parts.length >= 2) {
-            const owner = parts[0];
-            const repoAndRef = parts[1].split("@");
-            const repo = repoAndRef[0];
-            const ref = repoAndRef[1];
-
-            return [{ owner, repo, ...(ref && { ref }) }];
-          }
-        }
-
-        return [];
-      }) || []
-  );
+  return Object.keys(plugins).flatMap((key) => {
+    return parsePluginIdentifier(key);
+  });
 }

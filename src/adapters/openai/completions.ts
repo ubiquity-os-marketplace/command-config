@@ -45,11 +45,15 @@ Here is the original YAML configuration file for ${repoUrl}:`,
 When making changes to plugin configurations, maintain this structure:
 
 # Example of correct plugin formatting
-- uses:
-- plugin: <ORG/OWNER>/<REPO>@main
-  with:
-    property1: value1
-    property2: value2
+
+plugins:
+  "https://my-plugin.com":
+    with:
+      property1: value1
+      property2: value2
+  "my-org/my-repo":
+    with:
+      property1: value1
 
 PLUGIN INSTRUCTIONS:
 - Ensure all plugin configurations are correctly formatted
