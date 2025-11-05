@@ -1,3 +1,4 @@
+import { fetchOrganizationManifests } from "../helpers/fetch-organization-manifests";
 import { getFileContent } from "../helpers/get-file-content";
 import { fetchAndParseFileContent, processTargetRepos } from "../helpers/process-targets";
 import { targetBuilder } from "../helpers/target-scope";
@@ -27,6 +28,14 @@ export async function syncAgent(editorInstruction: string, context: Context): Pr
 
   // Manifest Cache
   const manifestStore: Record<string, Manifest> = {};
+
+  try {
+    await fetchOrganizationManifests(context, "ubiquity-os-marketplace", manifestStore);
+  } catch (error) {
+    logger.warn(`Error fetching marketplace manifests`, {
+      err: error,
+    });
+  }
 
   for (const target of Object.values(targets)) {
     try {
