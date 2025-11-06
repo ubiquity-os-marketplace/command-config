@@ -44,20 +44,16 @@ Here is the original YAML configuration file for ${repoUrl}:`,
 
 When making changes to plugin configurations, maintain this structure:
 
-# Example of correct plugin formatting
+# Example of correct plugin file configuration formatting
 
 plugins:
-  "https://my-plugin.com":
+  "<plugin_url_or_action_path>":
     with:
-      property1: value1
-      property2: value2
-  "my-org/my-repo":
-    with:
-      property1: value1
+      <property_name>: <property_value>
 
 PLUGIN INSTRUCTIONS:
 - Ensure all plugin configurations are correctly formatted
-- Use the manifests below to understand valid plugin properties and default values
+- Use the manifests below to understand valid plugin properties and default values. 
 - Do not remove any existing plugin configurations unless instructed
 - Add new plugin configurations at the end of the file
 - Infer ORG/OWNER and REPO details from the included plugin configurations and manifests
@@ -75,7 +71,10 @@ The YAML parser that will be used to validate your output is shown below. Ensure
       parserCode,
 
       `IMPORTANT CONTEXT MANIFESTS:
-The following manifests define the allowed properties and default values for plugins referenced in the configuration. Use these as your reference when adding or modifying plugin properties:`,
+The following manifests define the allowed properties and default values for plugins referenced in the configuration. Use these as your reference when adding or modifying plugin properties.
+For each manifest, the "configuration.properties" key lists the available "with" options for each plugin. If a manifest has a "homepage_url" key, use it for the plugin key as a url, otherwise use the Action as a key in a form of <ORG>/<REPO>@<BRANCH>
+
+`,
       manifests
         .map((manifest) => {
           this.context.logger.info(`Manifest: ${JSON.stringify(manifest)}`);
@@ -145,7 +144,9 @@ ${JSON.stringify(manifest)}
       }
 
       lastError = validation.error;
-      this.context.logger.warn(`Invalid YAML on attempt ${attempts}/${maxRetries}: ${validation.error}`);
+      this.context.logger.warn(`Invalid YAML on attempt ${attempts}/${maxRetries}: ${validation.error}`, {
+        completion,
+      });
 
       // If we've exhausted our retries, throw an error
       if (attempts >= maxRetries) {

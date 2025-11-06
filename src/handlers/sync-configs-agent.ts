@@ -54,7 +54,10 @@ export async function syncAgent(editorInstruction: string, context: Context): Pr
       const prUrl = await processTargetRepos(target, parserCode, editorInstruction, context, manifestStore);
       if (prUrl) prUrls.push(prUrl);
     } catch (error) {
-      logger.warn(`Error processing target: ${error} & ${JSON.stringify(target)}`);
+      logger.warn(`Failed to process the target.`, {
+        err: error,
+        target: JSON.stringify(target),
+      });
       continue;
     }
   }
