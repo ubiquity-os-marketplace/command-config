@@ -52,7 +52,7 @@ const emitterType = stringLiteralUnion(emitterEventNames);
 
 const runsOnSchema = T.Array(emitterType, { default: [] });
 
-const pluginSettingsSchema = T.Object(
+const pluginInvocationSchema = T.Object(
   {
     id: T.Optional(T.String()),
     plugin: githubPluginType(),
@@ -63,11 +63,35 @@ const pluginSettingsSchema = T.Object(
   { default: {} }
 );
 
-const handlerSchema = T.Record(T.String(), pluginSettingsSchema, { default: {} });
+const handlerSchema = T.Record(T.String(), pluginInvocationSchema, { default: {} });
+
+export const configReadSchema = T.Object(
+  {
+    plugins: handlerSchema,
+  },
+  {
+    additionalProperties: true,
+  }
+);
+
+const pluginSettingsSchema = T.Union(
+  [
+    T.Null(),
+    T.Object(
+      {
+        with: T.Record(T.String(), T.Unknown(), { default: {} }),
+        runsOn: T.Optional(runsOnSchema),
+        skipBotEvents: T.Optional(T.Boolean()),
+      },
+      { default: {} }
+    ),
+  ],
+  { default: null }
+);
 
 export const configSchema = T.Object(
   {
-    plugins: handlerSchema,
+    plugins: T.Record(T.String(), pluginSettingsSchema, { default: {} }),
   },
   {
     additionalProperties: true,

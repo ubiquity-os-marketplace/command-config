@@ -2,11 +2,11 @@ import { Value } from "@sinclair/typebox/value";
 import { YAMLError } from "yaml";
 import yaml from "js-yaml";
 import { Context } from "../types/index";
-import { PluginConfiguration, configSchema, configSchemaValidator, pluginNameRegex, urlRegex } from "../config/plugin-schema";
+import { PluginConfiguration, configReadSchema, configSchemaValidator, pluginNameRegex, urlRegex, configSchema } from "../config/plugin-schema";
 
 export function parseConfig(yamlContent: string, logger: Context["logger"]): PluginLocation[] {
   try {
-    Value.Cast(configSchema, yaml.load(yamlContent)); // Validate schema
+    Value.Cast(configReadSchema, yaml.load(yamlContent)); // Validate schema
     return parsePluginLocations(yamlContent, logger);
   } catch (error) {
     logger.error("Failed to parse YAML content", { stack: error instanceof Error ? error.stack : String(error) });
