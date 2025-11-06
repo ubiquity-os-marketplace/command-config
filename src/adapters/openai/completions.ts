@@ -23,7 +23,7 @@ export class Completions extends SuperOpenAi {
     super(client, context);
   }
 
-  promptBuilder(originalContent: string, parserCode: string, manifests: Manifest[], repoUrl: string): string {
+  promptBuilder(originalContent: string, parserCode: string, manifests: Record<string, Manifest>, repoUrl: string): string {
     // Build the prompt
     return [
       `As a YAML configuration editor, modify the following YAML file according to the user's instructions, ensuring valid syntax and preserving formatting. Your task is to apply the changes while maintaining proper YAML structure.
@@ -53,18 +53,17 @@ plugins:
 
 PLUGIN INSTRUCTIONS:
 - Ensure all plugin configurations are correctly formatted
-- Use the manifests below to understand valid plugin properties and default values. 
+- Use the manifests below to understand valid plugin properties and default values
 - Do not remove any existing plugin configurations unless instructed
 - Add new plugin configurations at the end of the file
-- Infer ORG/OWNER and REPO details from the included plugin configurations and manifests
 - DO NOT REMOVE CONTENT UNLESS SPECIFICALLY INSTRUCTED TO DO SO.
-
 
 FORMATTING REQUIREMENTS:
 - Preserve all indentation and spacing conventions from the original file
 - Keep all comments intended for human readers—including any URLs within them
 - Preserve all comments (this includes documentation, inline, and block comments) and URLs unless specifically instructed otherwise; only remove commented-out YAML code when instructed
 - If adding new properties, refer to the manifests for proper names and default values
+- DO NOT add any comment to your changes
 
 The YAML parser that will be used to validate your output is shown below. Ensure your modifications comply with this parser:`,
 
@@ -72,13 +71,16 @@ The YAML parser that will be used to validate your output is shown below. Ensure
 
       `IMPORTANT CONTEXT MANIFESTS:
 The following manifests define the allowed properties and default values for plugins referenced in the configuration. Use these as your reference when adding or modifying plugin properties.
-For each manifest, the "configuration.properties" key lists the available "with" options for each plugin. If a manifest has a "homepage_url" key, use it for the plugin key as a url, otherwise use the Action as a key in a form of <ORG>/<REPO>@<BRANCH>
+For each manifest, the "configuration.properties" key lists the available "with" options for each plugin. Use the KEY to add the key entry in the manifest plugins array.
 
 `,
-      manifests
-        .map((manifest) => {
-          this.context.logger.info(`Manifest: ${JSON.stringify(manifest)}`);
+      Object.entries(manifests)
+        .map(([name, manifest]) => {
+          this.context.logger.debug(`Manifest: ${JSON.stringify(manifest)}`);
           return `### ${manifest.name} - Start
+
+KEY: ${manifest.homepage_url ?? name.replace(/\/(?=[^/]*$)/, "@")}
+
 \`\`\`json
 ${JSON.stringify(manifest)}
 \`\`\`

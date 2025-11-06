@@ -86,5 +86,6 @@ function decodeManifest(manifest: unknown): Manifest {
     commands: typedManifest.commands || {},
     "ubiquity:listeners": typedManifest["ubiquity:listeners"] || [],
     configuration: typedManifest.configuration || {},
+    homepage_url: typedManifest.homepage_url,
   };
 }

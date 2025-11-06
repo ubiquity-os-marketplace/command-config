@@ -6,4 +6,5 @@ export type Manifest = {
   commands?: Record<string, { description: string; "ubiquity:example": string }>;
   "ubiquity:listeners"?: string[];
   configuration?: Record<string, unknown>;
+  homepage_url?: string;
 };

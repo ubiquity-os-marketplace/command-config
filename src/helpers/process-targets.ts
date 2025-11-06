@@ -23,11 +23,11 @@ export async function processTargetRepos(
   context: Context,
   manifestStore?: Record<string, Manifest>
 ): Promise<string | undefined> {
-  const { currentFileContents, manifests } = await fetchAndParseFileContent(context, target, manifestStore);
+  const { currentFileContents } = await fetchAndParseFileContent(context, target, manifestStore);
 
   // Build Prompt
   const { adapters } = context;
-  const prompt = adapters.openai.completions.promptBuilder(currentFileContents, parserCode, manifests, target.url);
+  const prompt = adapters.openai.completions.promptBuilder(currentFileContents, parserCode, manifestStore ?? {}, target.url);
 
   context.logger.info(`Prompt: ${prompt}`);
   // Update the file with the new content by making a LLM call
