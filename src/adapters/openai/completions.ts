@@ -71,7 +71,7 @@ The YAML parser that will be used to validate your output is shown below. Ensure
 
       `IMPORTANT CONTEXT MANIFESTS:
 The following manifests define the allowed properties and default values for plugins referenced in the configuration. Use these as your reference when adding or modifying plugin properties.
-For each manifest, the "configuration.properties" key lists the available "with" options for each plugin. Use the KEY to add the key entry in the manifest plugins array.
+For each manifest, the "configuration.properties" key lists the available "with:" options for each plugin. Use the KEY to add the "<plugin_url_or_action_path>" entry in the manifest plugins object.
 
 `,
       Object.entries(manifests)
