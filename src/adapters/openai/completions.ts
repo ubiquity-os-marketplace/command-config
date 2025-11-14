@@ -44,12 +44,14 @@ Here is the original YAML configuration file for ${repoUrl}:`,
 
 When making changes to plugin configurations, maintain this structure:
 
-# Example of correct plugin file configuration formatting
+# Example of correct plugin file configuration formatting for the final output result
 
+\`\`\`yml
 plugins:
   "<plugin_url_or_action_path>":
     with:
       <property_name>: <property_value>
+\`\`\`
 
 PLUGIN INSTRUCTIONS:
 - Ensure all plugin configurations are correctly formatted
