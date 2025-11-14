@@ -47,6 +47,9 @@ export async function syncAgent(editorInstruction: string, context: Context): Pr
     }
   }
 
+  logger.debug("Will use the following manifest store", {
+    manifestStore,
+  });
   // Run the Repo Config Extractor on the targets (by this point we know the sender has permissions to the targets)
   for (const target of Object.values(targets)) {
     if (target.readonly) continue;
