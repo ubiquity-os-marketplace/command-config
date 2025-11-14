@@ -26,54 +26,47 @@ export class Completions extends SuperOpenAi {
   promptBuilder(originalContent: string, parserCode: string, manifests: Record<string, Manifest>, repoUrl: string): string {
     // Build the prompt
     return [
-      `As a YAML configuration editor, modify the following YAML file according to the user's instructions, ensuring valid syntax and preserving formatting. Your task is to apply the changes while maintaining proper YAML structure.
+      `As a YAML configuration editor, modify the following YAML file according to the user's instructions, ensuring valid syntax and preserving formatting. Your task is to apply the changes while maintaining proper YAML structure and returning the entire file content.
 
-KEY INSTRUCTIONS:
-1. Preserve all list indicators (hyphens \`-\`), especially for plugin configurations
-2. Validate the modified YAML against the parser code provided below
-3. Use the provided manifests to understand valid property names and default values
-4. **Do not alter any URLs in the configuration unless explicitly instructed**
-5. Do NOT remove any comments from the YAML configuration. All comments, including documentation and inline notes, must be preserved exactly as in the original file. Only remove or alter comments if specifically instructed to do so.
+    KEY INSTRUCTIONS:
+    1. Preserve all list indicators (hyphens \`-\`), especially for plugin configurations
+    2. Validate the modified YAML against the parser code provided below
+    3. Use the provided manifests to understand valid property names and default values
+    4. **Do not alter any URLs in the configuration unless explicitly instructed**
+    5. Do NOT remove any comments from the YAML configuration. All comments, including documentation and inline notes, must be preserved exactly as in the original file. Only remove or alter comments if specifically instructed to do so.
+    6. Always return the complete YAML configuration, including sections you did not modify.
+    7. Match plugin identifiers to the manifest KEY exactly. If the KEY is a URL, keep it as a URL; if it is an owner/repo reference, keep that format.
+    8. When a property is not specified by the user, omit optional fields and rely on schema defaults instead of inventing new values.
 
-Here is the original YAML configuration file for ${repoUrl}:`,
+    Here is the original YAML configuration file for ${repoUrl}:`,
 
       originalContent,
 
-      `Provide only the modified YAML content without any additional explanation, headers, footers, code block markers, or language identifiers.
-      Your response MUST contain ONLY the YAML content. Do NOT include any explanation, headers, footers, or introductory text.
+      `Provide only the YAML content without any additional explanation, headers, footers, code block markers, or language identifiers.
+      Your response MUST contain ONLY the YAML content for the entire file. Do NOT include any explanation, headers, footers, or introductory text.
 
-When making changes to plugin configurations, maintain this structure:
+    PLUGIN INSTRUCTIONS:
+    - Ensure all plugin configurations match the structure already present in the file
+    - Use the manifests below to understand valid plugin properties and default values
+    - Do not remove any existing plugin configurations unless instructed
+    - Add new plugin configurations at the end of the file unless the user specifies a position
+    - DO NOT REMOVE CONTENT UNLESS SPECIFICALLY INSTRUCTED TO DO SO.
+    - When adding or updating a plugin, choose properties from the manifest's configuration section. If a property is optional and no instruction is given, omit it so the schema defaults apply.
 
-# Example of the correct plugin file configuration formatting for the final output result
-
-\`\`\`yml
-plugins:
-  "<plugin_url_or_action_path>":
-    with:
-      <property_name>: <property_value>
-\`\`\`
-
-PLUGIN INSTRUCTIONS:
-- Ensure all plugin configurations are correctly formatted
-- Use the manifests below to understand valid plugin properties and default values
-- Do not remove any existing plugin configurations unless instructed
-- Add new plugin configurations at the end of the file
-- DO NOT REMOVE CONTENT UNLESS SPECIFICALLY INSTRUCTED TO DO SO.
-
-FORMATTING REQUIREMENTS:
-- Preserve all indentation and spacing conventions from the original file
-- Keep all comments intended for human readers—including any URLs within them
-- Preserve all comments (this includes documentation, inline, and block comments) and URLs unless specifically instructed otherwise; only remove commented-out YAML code when instructed
-- If adding new properties, refer to the manifests for proper names and default values
-- DO NOT add any comment to your changes
+    FORMATTING REQUIREMENTS:
+    - Preserve all indentation and spacing conventions from the original file
+    - Keep all comments intended for human readers—including any URLs within them
+    - Preserve all comments (this includes documentation, inline, and block comments) and URLs unless specifically instructed otherwise; only remove commented-out YAML code when instructed
+    - If adding new properties, refer to the manifests for proper names and default values
+    - DO NOT add any comment to your changes
 
 The YAML parser that will be used to validate your output is shown below. Ensure your modifications comply with this parser:`,
 
       parserCode,
 
       `IMPORTANT CONTEXT MANIFESTS:
-The following manifests define the allowed properties and default values for plugins referenced in the configuration. Use these as your reference when adding or modifying plugin properties.
-For each manifest, the "configuration.properties" key lists the available "with:" options for each plugin. Use the KEY to add the "<plugin_url_or_action_path>" entry in the manifest plugins object.
+    The following manifests define the allowed properties and default values for plugins referenced in the configuration. Use these as your reference when adding or modifying plugin properties.
+    For each manifest, the "configuration.properties" key lists the available "with:" options for each plugin. Use the KEY exactly as shown for any "plugins" entry you add or update.
 
 `,
       Object.entries(manifests)
