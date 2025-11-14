@@ -44,7 +44,7 @@ Here is the original YAML configuration file for ${repoUrl}:`,
 
 When making changes to plugin configurations, maintain this structure:
 
-# Example of correct plugin file configuration formatting for the final output result
+# Example of the correct plugin file configuration formatting for the final output result
 
 \`\`\`yml
 plugins:
