@@ -2,7 +2,7 @@ import { StaticDecode, TLiteral, Type as T, Union } from "@sinclair/typebox";
 import { StandardValidator } from "typebox-validators";
 import { emitterEventNames } from "@octokit/webhooks";
 
-const pluginNameRegex = new RegExp("^([0-9a-zA-Z-._]+)/([0-9a-zA-Z-._]+)(?::([0-9a-zA-Z-._]+))?(?:@([0-9a-zA-Z-._]+(?:/[0-9a-zA-Z-._]+)*))?$");
+export const pluginNameRegex = new RegExp("^([0-9a-zA-Z-._]+)/([0-9a-zA-Z-._]+)(?::([0-9a-zA-Z-._]+))?(?:@([0-9a-zA-Z-._]+(?:/[0-9a-zA-Z-._]+)*))?$");
 
 export type GithubPlugin = {
   owner: string;
@@ -11,7 +11,7 @@ export type GithubPlugin = {
   ref?: string;
 };
 
-const urlRegex = /^https?:\/\/\S+$/;
+export const urlRegex = /^https?:\/\/\S+$/;
 
 /**
  * Transforms the string into a plugin object if the string is not an url
@@ -50,28 +50,48 @@ export function stringLiteralUnion<T extends string[]>(values: readonly [...T]):
 
 const emitterType = stringLiteralUnion(emitterEventNames);
 
-const pluginChainSchema = T.Array(
-  T.Object({
+const runsOnSchema = T.Array(emitterType, { default: [] });
+
+const pluginInvocationSchema = T.Object(
+  {
     id: T.Optional(T.String()),
     plugin: githubPluginType(),
     with: T.Record(T.String(), T.Unknown(), { default: {} }),
-    runsOn: T.Array(emitterType, { default: [] }),
+    runsOn: T.Optional(runsOnSchema),
     skipBotEvents: T.Optional(T.Boolean()),
-  }),
-  { minItems: 1, default: [] }
+  },
+  { default: {} }
 );
 
-const handlerSchema = T.Array(
-  T.Object({
-    name: T.Optional(T.String()),
-    uses: pluginChainSchema,
-  }),
-  { default: [] }
+const handlerSchema = T.Record(T.String(), pluginInvocationSchema, { default: {} });
+
+export const configReadSchema = T.Object(
+  {
+    plugins: handlerSchema,
+  },
+  {
+    additionalProperties: true,
+  }
+);
+
+const pluginSettingsSchema = T.Union(
+  [
+    T.Null(),
+    T.Object(
+      {
+        with: T.Record(T.String(), T.Unknown(), { default: {} }),
+        runsOn: T.Optional(runsOnSchema),
+        skipBotEvents: T.Optional(T.Boolean()),
+      },
+      { default: {} }
+    ),
+  ],
+  { default: null }
 );
 
 export const configSchema = T.Object(
   {
-    plugins: handlerSchema,
+    plugins: T.Record(T.String(), pluginSettingsSchema, { default: {} }),
   },
   {
     additionalProperties: true,

@@ -1,8 +1,9 @@
+import { fetchOrganizationManifests } from "../helpers/fetch-organization-manifests";
 import { getFileContent } from "../helpers/get-file-content";
 import { fetchAndParseFileContent, processTargetRepos } from "../helpers/process-targets";
 import { targetBuilder } from "../helpers/target-scope";
-import { Context } from "../types/index";
 import { Manifest } from "../types/github";
+import { Context } from "../types/index";
 
 export async function syncAgent(editorInstruction: string, context: Context): Promise<string[]> {
   const { logger, config } = context;
@@ -28,6 +29,14 @@ export async function syncAgent(editorInstruction: string, context: Context): Pr
   // Manifest Cache
   const manifestStore: Record<string, Manifest> = {};
 
+  try {
+    await fetchOrganizationManifests(context, "ubiquity-os-marketplace", manifestStore);
+  } catch (error) {
+    logger.warn(`Error fetching marketplace manifests`, {
+      err: error,
+    });
+  }
+
   for (const target of Object.values(targets)) {
     try {
       logger.info(`Fetching and parsing file content for target: ${JSON.stringify(target)}`);
@@ -38,6 +47,9 @@ export async function syncAgent(editorInstruction: string, context: Context): Pr
     }
   }
 
+  logger.debug("Will use the following manifest store", {
+    manifestStore,
+  });
   // Run the Repo Config Extractor on the targets (by this point we know the sender has permissions to the targets)
   for (const target of Object.values(targets)) {
     if (target.readonly) continue;
@@ -45,7 +57,10 @@ export async function syncAgent(editorInstruction: string, context: Context): Pr
       const prUrl = await processTargetRepos(target, parserCode, editorInstruction, context, manifestStore);
       if (prUrl) prUrls.push(prUrl);
     } catch (error) {
-      logger.warn(`Error processing target: ${error} & ${JSON.stringify(target)}`);
+      logger.warn(`Failed to process the target.`, {
+        err: error,
+        target: JSON.stringify(target),
+      });
       continue;
     }
   }

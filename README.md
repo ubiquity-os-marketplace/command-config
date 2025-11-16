@@ -1,4 +1,4 @@
-# `@ubiquity-os/plugin-template`
+# `@ubiquity-os/command-config`
 
 ## Prerequisites
 
