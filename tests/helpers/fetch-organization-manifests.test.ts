@@ -1,3 +1,4 @@
+import { Logs } from "@ubiquity-os/ubiquity-os-logger";
 import { fetchOrganizationManifests } from "../../src/helpers/fetch-organization-manifests.js";
 import type { Manifest } from "../../src/types/github.js";
 import type { Context } from "../../src/types/index.js";
@@ -52,9 +53,7 @@ describe("fetchOrganizationManifests", () => {
 
     const context = {
       octokit,
-      logger: {
-        warn: () => undefined,
-      },
+      logger: new Logs("info"),
     } as unknown as Context;
 
     await fetchOrganizationManifests(context, "ubiquity-os-marketplace", manifestCache);
