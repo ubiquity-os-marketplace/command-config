@@ -2,6 +2,7 @@
   "name": "command-config",
   "description": "Edits UbiquityOS configuration files based on natural language queries.",
   "ubiquity:listeners": [],
+  "workflowId": "action.yml",
   "commands": {
     "config": {
       "ubiquity:example": "/config <editor_instruction>",
