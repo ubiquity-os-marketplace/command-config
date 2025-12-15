@@ -29,7 +29,7 @@ function githubPluginType() {
       return {
         owner: matches[1],
         repo: matches[2],
-        workflowId: matches[3] || "compute.yml",
+        workflowId: matches[3] || "action.yml",
         ref: matches[4] || undefined,
       } as GithubPlugin;
     })
