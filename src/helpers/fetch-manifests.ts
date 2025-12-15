@@ -6,13 +6,16 @@ export async function fetchManifests(pluginLocations: PluginLocation[], manifest
   const manifests: Manifest[] = [];
 
   for (const plugin of pluginLocations) {
+    context.logger.debug(`Trying to fetch manifest`, {
+      plugin: plugin,
+    });
     const manifest = await fetchManifest(plugin, manifestCache, context);
     if (manifest) {
       manifests.push(manifest);
     }
   }
 
-  return manifests;
+  return [...Object.values(manifestCache), ...manifests];
 }
 async function fetchManifest(plugin: PluginLocation, manifestCache: Record<string, Manifest>, context: Context): Promise<Manifest | null> {
   if (typeof plugin === "string") {
@@ -83,5 +86,6 @@ function decodeManifest(manifest: unknown): Manifest {
     commands: typedManifest.commands || {},
     "ubiquity:listeners": typedManifest["ubiquity:listeners"] || [],
     configuration: typedManifest.configuration || {},
+    homepage_url: typedManifest.homepage_url,
   };
 }
