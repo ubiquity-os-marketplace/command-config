@@ -1,7 +1,6 @@
 import { createPlugin } from "@ubiquity-os/plugin-sdk";
 import { Manifest } from "@ubiquity-os/plugin-sdk/manifest";
 import { LOG_LEVEL, LogLevel } from "@ubiquity-os/ubiquity-os-logger";
-import { ExecutionContext } from "hono";
 import manifest from "../manifest.json";
 import { createAdapters } from "./adapters/index";
 import { runPlugin } from "./index";
@@ -9,7 +8,7 @@ import { Command } from "./types/command";
 import { Env, envSchema, PluginSettings, pluginSettingsSchema, SupportedEvents } from "./types/index";
 
 export default {
-  async fetch(request: Request, env: Env, executionCtx?: ExecutionContext) {
+  async fetch(request: Request, env: Env) {
     return createPlugin<PluginSettings, Env, Command, SupportedEvents>(
       (context) => {
         return runPlugin({
@@ -19,13 +18,13 @@ export default {
       },
       manifest as Manifest,
       {
-        envSchema: envSchema,
+        envSchema,
         postCommentOnError: true,
         settingsSchema: pluginSettingsSchema,
         logLevel: (env.LOG_LEVEL as LogLevel) || LOG_LEVEL.INFO,
         kernelPublicKey: env.KERNEL_PUBLIC_KEY,
         bypassSignatureVerification: true,
       }
-    ).fetch(request, env, executionCtx);
+    ).fetch(request, env);
   },
 };

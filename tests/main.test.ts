@@ -33,7 +33,7 @@ describe("Plugin tests", () => {
 
   it("Should serve the manifest file", async () => {
     const worker = (await import("../src/worker")).default;
-    const response = await worker.fetch(new Request("http://localhost/manifest.json"), { OPENROUTER_API_KEY: "mock-api-key" });
+    const response = await worker.fetch(new Request("http://localhost/manifest.json"), {});
     const content = await response.json();
     expect(content).toEqual(manifest);
   });
@@ -128,6 +128,8 @@ function createContextInner(
   return {
     eventName: "issue_comment.created",
     command: null,
+    authToken: "ghs_mock",
+    ubiquityKernelToken: "kernel-mock",
     payload: {
       action: "created",
       sender: sender,
@@ -139,15 +141,12 @@ function createContextInner(
     },
     logger: new Logs("debug"),
     config: {
-      baseUrl: "https://openrouter.ai/api/v1",
       parserPath: `https://github.com/${STRINGS.USER_1}/ubiquity-os-kernel.git`,
       configPath: ".github/.ubiquity-os.config.yml",
       devConfigPath: ".github/.ubiquity-os.config.dev.yml",
-      defaultTargets: [{ name: `https://github.com/${STRINGS.USER_1}/.ubiquity-os.git`, type: "dev" }],
+      defaultTargets: [{ name: `https://github.com/${STRINGS.USER_1}/.ubiquity-os.git`, branch: "main", type: "dev" }],
     },
-    env: {
-      OPENROUTER_API_KEY: "mock-api-key",
-    } as Env,
+    env: {} as Env,
     octokit: octokit,
     commentHandler: new CommentHandler(),
   } as unknown as Context;

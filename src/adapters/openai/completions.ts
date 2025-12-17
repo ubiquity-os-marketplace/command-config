@@ -1,10 +1,18 @@
-import OpenAI from "openai";
-import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
+import type { ChatCompletion, ChatCompletionMessageParam } from "openai/resources/chat/completions";
+import { callLlm } from "@ubiquity-os/plugin-sdk";
 import { stripCodeFences } from "../../helpers/strip-code-fences";
 import { validateYamlContent } from "../../helpers/validator";
 import { Manifest } from "../../types/github";
 import { Context } from "../../types/index";
-import { SuperOpenAi } from "./openai";
+
+function isAsyncIterable<T>(value: unknown): value is AsyncIterable<T> {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    Symbol.asyncIterator in value &&
+    typeof (value as { [Symbol.asyncIterator]?: unknown })[Symbol.asyncIterator] === "function"
+  );
+}
 
 export interface Answer {
   text: string;
@@ -18,10 +26,8 @@ export interface Answer {
   };
 }
 
-export class Completions extends SuperOpenAi {
-  constructor(client: OpenAI, context: Context) {
-    super(client, context);
-  }
+export class Completions {
+  constructor(private readonly _context: Context) {}
 
   promptBuilder(originalContent: string, parserCode: string, manifests: Record<string, Manifest>, repoUrl: string): string {
     // Build the prompt
@@ -71,7 +77,7 @@ The YAML parser that will be used to validate your output is shown below. Ensure
 `,
       Object.entries(manifests)
         .map(([name, manifest]) => {
-          this.context.logger.debug(`Manifest: ${JSON.stringify(manifest)}`);
+          this._context.logger.debug(`Manifest: ${JSON.stringify(manifest)}`);
           return `### ${manifest.name} - Start
 
 KEY: ${manifest.homepage_url ?? name.replace(/\/(?=[^/]*$)/, "@")}
@@ -110,48 +116,56 @@ ${JSON.stringify(manifest)}
         });
       }
 
-      const response = await this.client.chat.completions.create({
-        model: this.context.config.model,
-        max_tokens: 4000,
-        temperature: attempts > 1 ? 0.2 : 0,
-        messages,
-      });
+      const response = await callLlm(
+        {
+          messages,
+          max_tokens: 4000,
+          temperature: attempts > 1 ? 0.2 : 0,
+        },
+        this._context
+      );
 
-      if (!response) throw this.context.logger.error("No response from API");
-      const rawCompletion = response.choices[0]?.message?.content;
-      if (!rawCompletion) throw this.context.logger.warn("No completion generated");
+      if (!response) throw this._context.logger.error("No response from API");
+      if (isAsyncIterable(response)) {
+        throw this._context.logger.error("Unexpected streaming response from LLM");
+      }
+
+      const completionResponse: ChatCompletion = response;
+      const rawCompletion = completionResponse.choices?.[0]?.message?.content;
+      if (!rawCompletion) throw this._context.logger.warn("No completion generated");
 
       const completion = stripCodeFences(String(rawCompletion));
 
       // Validate the YAML output
-      const validation = validateYamlContent(completion, this.context.logger);
+      const validation = validateYamlContent(completion, this._context.logger);
       if (validation.isValid) {
+        const usage = completionResponse.usage;
         return {
           text: completion,
           tokenCounts: {
-            inputTokens: response.usage?.prompt_tokens || 0,
-            outputTokens: response.usage?.completion_tokens || 0,
-            totalTokens: response.usage?.total_tokens || 0,
+            inputTokens: usage?.prompt_tokens ?? 0,
+            outputTokens: usage?.completion_tokens ?? 0,
+            totalTokens: usage?.total_tokens ?? 0,
           },
           metadata: {
             attempts,
-            ...response,
+            ...completionResponse,
           },
         };
       }
 
       lastError = validation.error;
-      this.context.logger.warn(`Invalid YAML on attempt ${attempts}/${maxRetries}: ${validation.error}`, {
+      this._context.logger.warn(`Invalid YAML on attempt ${attempts}/${maxRetries}: ${validation.error}`, {
         completion,
       });
 
       // If we've exhausted our retries, throw an error
       if (attempts >= maxRetries) {
-        throw this.context.logger.error(`Failed to generate valid YAML after ${maxRetries} attempts. Last error: ${validation.error}`);
+        throw this._context.logger.error(`Failed to generate valid YAML after ${maxRetries} attempts. Last error: ${validation.error}`);
       }
     }
 
     // This should never be reached due to the throw above, but TypeScript needs it
-    throw this.context.logger.error("Unexpected end of completion generation");
+    throw this._context.logger.error("Unexpected end of completion generation");
   }
 }

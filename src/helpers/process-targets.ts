@@ -27,11 +27,11 @@ export async function processTargetRepos(
 
   // Build Prompt
   const { adapters } = context;
-  const prompt = adapters.openai.completions.promptBuilder(currentFileContents, parserCode, manifestStore ?? {}, target.url);
+  const prompt = adapters.llm.completions.promptBuilder(currentFileContents, parserCode, manifestStore ?? {}, target.url);
 
   context.logger.info(`Prompt: ${prompt}`);
   // Update the file with the new content by making a LLM call
-  const llmResponse = await adapters.openai.completions.createCompletions(prompt, editorInstruction);
+  const llmResponse = await adapters.llm.completions.createCompletions(prompt, editorInstruction);
 
   // Log the updated file contents
   context.logger.info(`Updated file contents: ${JSON.stringify(llmResponse)}`);

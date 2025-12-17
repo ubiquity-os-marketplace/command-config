@@ -2,22 +2,14 @@ import { syncConfigs } from "./handlers/sync-config";
 import { Context } from "./types/index";
 import { isCommentEvent } from "./types/typeguards";
 import { createAdapters } from "./adapters/index";
-import OpenAI from "openai";
 
 /**
  * The main plugin function. Split for easier testing.
  */
 export async function runPlugin(context: Context) {
-  const { logger, config, eventName, env, commentHandler } = context;
+  const { logger, eventName, commentHandler } = context;
 
-  // Create Clients
-  const openai = new OpenAI({
-    baseURL: config.baseUrl,
-    apiKey: env.OPENROUTER_API_KEY,
-  });
-
-  // Set up adapters
-  context.adapters = createAdapters(openai, context);
+  context.adapters = createAdapters(context);
 
   if (isCommentEvent(context)) {
     await commentHandler.postComment(context, logger.info("Processing configuration change request..."));

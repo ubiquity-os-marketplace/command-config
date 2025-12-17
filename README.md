@@ -30,11 +30,9 @@ plugins:
     uses:
       - plugin: http://localhost:4000
         with:
-          baseUrl: "https://openrouter.ai/api/v1"
           parserPath: "https://github.com/ubiquity-os/ubiquity-os-kernel.git"
           configPath: ".github/.ubiquity-os.config.yml"
           devConfigPath: ".github/.ubiquity-os.config.dev.yml"
-          model: deepseek/deepseek-r1-0528:free
           defaultTargets:
             - name: "https://github.com/ubiquity-os/.ubiquity-os.git"
               branch: "main"

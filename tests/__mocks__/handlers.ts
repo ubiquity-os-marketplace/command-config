@@ -5,8 +5,8 @@ import issueTemplate from "./issue-template";
  * Intercepts the routes and returns a custom payload
  */
 export const handlers = [
-  // Handle OpenRouter API request
-  http.post("https://openrouter.ai/api/v1/chat/completions", () => {
+  // Handle LLM request
+  http.post("https://ai.ubq.fi/v1/chat/completions", () => {
     return HttpResponse.json({
       choices: [
         {
