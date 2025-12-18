@@ -4,6 +4,19 @@ import { Target } from "../types/target";
 import { getFileContent } from "./get-file-content";
 import { checkOrgPermissions, checkUserRepoPermissions } from "./user-permission";
 
+const LOCAL_CONFIG_FULL_PATH = ".github/.ubiquity-os.config.local.yml";
+
+async function tryGetRepoConfigFile(context: Context, owner: string, repo: string, filePath: string, label: string): Promise<string | undefined> {
+  try {
+    return await getFileContent(context, owner, repo, filePath);
+  } catch (error: unknown) {
+    context.logger.info(
+      `${label} config file not found in repo: ${owner}/${repo}/${filePath}. Error: ${error instanceof Error ? error.message : String(error)}`
+    );
+    return undefined;
+  }
+}
+
 async function processBaseTargets(context: Context): Promise<Record<string, Target>> {
   const { config, logger } = context;
   const targetMap: Record<string, Target> = {};
@@ -42,39 +55,29 @@ async function processBaseTargets(context: Context): Promise<Record<string, Targ
 async function processRepoConfigs(
   context: Context,
   targetMap: Record<string, Target>
-): Promise<{ repoConfig: string | undefined; repoDevConfig: string | undefined }> {
-  const { payload, config, logger } = context;
+): Promise<{ repoConfig: string | undefined; repoDevConfig: string | undefined; repoLocalConfig: string | undefined }> {
+  const { payload, config } = context;
   const repoOwner = payload.repository.owner.login;
   const repoName = payload.repository.name;
-  let repoConfig, repoDevConfig;
 
-  try {
-    // Try to get repo level configs
-    repoConfig = await getFileContent(context, repoOwner, repoName, config.configPath);
-  } catch (error: unknown) {
-    logger.info(
-      `Config file not found in repo: ${repoOwner}/${repoName}/${config.configPath}. Error: ${error instanceof Error ? error.message : String(error)}`
-    );
-  }
+  const repoConfig = await tryGetRepoConfigFile(context, repoOwner, repoName, config.configPath, "Config");
+  const repoDevConfig = await tryGetRepoConfigFile(context, repoOwner, repoName, config.devConfigPath, "Dev");
+  const repoLocalConfig = await tryGetRepoConfigFile(context, repoOwner, repoName, LOCAL_CONFIG_FULL_PATH, "Local");
 
-  try {
-    repoDevConfig = await getFileContent(context, repoOwner, repoName, config.devConfigPath);
-  } catch (error: unknown) {
-    logger.info(
-      `Dev config file not found in repo: ${repoOwner}/${repoName}/${config.devConfigPath}. Error: ${error instanceof Error ? error.message : String(error)}`
-    );
-  }
+  if (repoConfig || repoDevConfig || repoLocalConfig) {
+    const baseRepoTarget = {
+      owner: repoOwner,
+      repo: repoName,
+      localDir: path.join(repoOwner, repoName),
+      url: `https://github.com/${repoOwner}/${repoName}.git`,
+      readonly: false,
+    } satisfies Omit<Target, "type" | "filePath">;
 
-  if (repoConfig || repoDevConfig) {
     if (repoConfig) {
       const repoTarget: Target = {
         type: "config",
-        owner: repoOwner,
-        repo: repoName,
-        localDir: path.join(repoOwner, repoName),
-        url: `https://github.com/${repoOwner}/${repoName}.git`,
+        ...baseRepoTarget,
         filePath: config.configPath,
-        readonly: false,
       };
       targetMap[buildIdForTarget(repoTarget)] = repoTarget;
     }
@@ -82,18 +85,23 @@ async function processRepoConfigs(
     if (repoDevConfig) {
       const repoDevTarget: Target = {
         type: "dev",
-        owner: repoOwner,
-        repo: repoName,
-        localDir: path.join(repoOwner, repoName),
-        url: `https://github.com/${repoOwner}/${repoName}.git`,
+        ...baseRepoTarget,
         filePath: config.devConfigPath,
-        readonly: false,
       };
       targetMap[buildIdForTarget(repoDevTarget)] = repoDevTarget;
     }
+
+    if (repoLocalConfig) {
+      const repoLocalTarget: Target = {
+        type: "local",
+        ...baseRepoTarget,
+        filePath: LOCAL_CONFIG_FULL_PATH,
+      };
+      targetMap[buildIdForTarget(repoLocalTarget)] = repoLocalTarget;
+    }
   }
 
-  return { repoConfig, repoDevConfig };
+  return { repoConfig, repoDevConfig, repoLocalConfig };
 }
 
 async function getConfig(context: Context, orgName: string, repoName: string, configPath: string) {
@@ -148,9 +156,9 @@ async function processOrgConfig(context: Context, targetMap: Record<string, Targ
 export async function targetBuilder(context: Context): Promise<Record<string, Target>> {
   try {
     const targetMap: Record<string, Target> = {};
-    const { repoConfig, repoDevConfig } = await processRepoConfigs(context, targetMap);
+    const { repoConfig, repoDevConfig, repoLocalConfig } = await processRepoConfigs(context, targetMap);
 
-    if (!(repoConfig || repoDevConfig)) {
+    if (!(repoConfig || repoDevConfig || repoLocalConfig)) {
       await processOrgConfig(context, targetMap);
     }
 

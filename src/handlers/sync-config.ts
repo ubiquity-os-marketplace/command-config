@@ -51,20 +51,22 @@ export async function syncConfigs(context: Context) {
 function extractEditorInstruction(context: Context): { editorInstruction: string } | null {
   const { payload, command, logger } = context;
 
-  let editorInstruction;
-
-  if (command && command.name !== "config") {
-    editorInstruction = command.parameters.editorInstruction;
-  } else if (payload.comment.body.trim().startsWith("/config")) {
-    editorInstruction = payload.comment.body.trim().replace("/config", "").trim();
-  } else {
-    return null;
+  const body = payload.comment.body.trim();
+  if (command && command.name === "config") {
+    const editorInstruction = command.parameters.editor_instruction ?? command.parameters.editorInstruction;
+    if (typeof editorInstruction !== "string" || editorInstruction.trim() === "") {
+      throw logger.error("Editor instruction cannot be empty. Please provide editing instructions.");
+    }
+    return { editorInstruction };
   }
 
-  if (!editorInstruction || editorInstruction.trim() === "") {
-    throw logger.error("Editor instruction cannot be empty. Please provide editing instructions.");
+  if (body.startsWith("/config")) {
+    const editorInstruction = body.slice("/config".length).trim();
+    if (!editorInstruction) {
+      throw logger.error("Editor instruction cannot be empty. Please provide editing instructions.");
+    }
+    return { editorInstruction };
   }
 
-  // The target-scope handler will check if repo config exists otherwise fallback to org
-  return { editorInstruction };
+  return null;
 }
