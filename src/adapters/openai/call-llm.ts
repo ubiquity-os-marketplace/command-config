@@ -4,7 +4,6 @@ import type {
   ChatCompletionCreateParamsNonStreaming,
   ChatCompletionMessageParam,
 } from "openai/resources/chat/completions";
-import type { Context } from "../../types/index";
 
 export type LlmCallOptions = {
   baseUrl?: string;
@@ -37,9 +36,16 @@ function getAiBaseUrl(options: LlmCallOptions): string {
   return "https://ai.ubq.fi";
 }
 
-export async function callLlm(options: LlmCallOptions, context: Context): Promise<ChatCompletion | AsyncIterable<ChatCompletionChunk>> {
+type KernelAuthedContext = {
+  authToken?: string;
+  ubiquityKernelToken?: string;
+  payload?: unknown;
+  eventPayload?: unknown;
+};
+
+export async function callLlm(options: LlmCallOptions, context: KernelAuthedContext): Promise<ChatCompletion | AsyncIterable<ChatCompletionChunk>> {
   const authToken = context.authToken;
-  const payload = context.payload as unknown as {
+  const payload = (context.payload ?? context.eventPayload) as unknown as {
     repository?: { owner?: { login?: string }; name?: string };
     installation?: { id?: number };
   };
