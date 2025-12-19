@@ -34,7 +34,7 @@
   ],
   "dependencies": {
     "@octokit/webhooks": "^14.0.2",
-    "@sinclair/typebox": "0.34.15",
+    "@sinclair/typebox": "0.33.17",
     "@types/js-yaml": "^4.0.9",
     "@ubiquity-os/plugin-sdk": "^3.3.0",
     "@ubiquity-os/ubiquity-os-logger": "^1.4.0",

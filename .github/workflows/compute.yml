@@ -28,7 +28,7 @@ on:
 
 jobs:
   compute:
-    name: ${{ github.event.repository.name }}
+
     runs-on: ubuntu-latest
     permissions: write-all
     environment: ${{ (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) && 'main' || 'development' }}
@@ -46,7 +46,6 @@ jobs:
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
-
-      - name: Execute directive
+      - name: ${{ github.event.repository.name }}
         run: bun ./src/action.ts
         id: plugin-name

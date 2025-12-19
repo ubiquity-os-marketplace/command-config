@@ -25,10 +25,13 @@ async function fetchManifest(plugin: PluginLocation, manifestCache: Record<strin
     }
 
     try {
-      // Log that we're using a direct URL
-      const response = await context.octokit.request(`GET ${plugin}`);
-      const content = JSON.stringify(response.data);
-      const manifest = decodeManifest(JSON.parse(content));
+      const normalized = plugin.trim().replace(/\/+$/, "");
+      const manifestUrl = normalized.endsWith("/manifest.json") ? normalized : `${normalized}/manifest.json`;
+      const response = await fetch(manifestUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      const manifest = decodeManifest(await response.json());
       manifestCache[plugin] = manifest;
       return manifest;
     } catch (e) {
