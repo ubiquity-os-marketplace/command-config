@@ -83,6 +83,7 @@ function decodeManifest(manifest: unknown): Manifest {
   return {
     name: typedManifest.name,
     description: typedManifest.description || "",
+    short_name: typeof typedManifest.short_name === "string" && typedManifest.short_name.trim().length ? typedManifest.short_name.trim() : undefined,
     commands: typedManifest.commands || {},
     "ubiquity:listeners": typedManifest["ubiquity:listeners"] || [],
     configuration: typedManifest.configuration || {},

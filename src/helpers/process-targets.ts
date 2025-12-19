@@ -5,6 +5,7 @@ import { Target } from "../types/target";
 import { applyChanges } from "./apply-changes";
 import { fetchManifests } from "./fetch-manifests";
 import { getFileContent } from "./get-file-content";
+import { buildPluginAliasIndex, expandPluginInstallShorthand } from "./plugin-alias";
 import { parseConfig } from "./validator";
 
 function extractYamlOnly(text: string): string {
@@ -30,8 +31,20 @@ export async function processTargetRepos(
   const prompt = adapters.llm.completions.promptBuilder(currentFileContents, parserCode, manifestStore ?? {}, target.url);
 
   context.logger.info(`Prompt: ${prompt}`);
+  const aliasIndex = buildPluginAliasIndex(manifestStore ?? {});
+  const expanded = expandPluginInstallShorthand(editorInstruction, aliasIndex);
+  if (expanded.replacements.length) {
+    context.logger.info("Expanded plugin shorthand in editor instruction.", {
+      replacements: expanded.replacements,
+    });
+  }
+  if (expanded.ambiguous.length) {
+    context.logger.warn("Some plugin names were ambiguous; leaving them unchanged.", {
+      ambiguous: expanded.ambiguous,
+    });
+  }
   // Update the file with the new content by making a LLM call
-  const llmResponse = await adapters.llm.completions.createCompletions(prompt, editorInstruction);
+  const llmResponse = await adapters.llm.completions.createCompletions(prompt, expanded.expandedInstruction);
 
   // Log the updated file contents
   context.logger.info(`Updated file contents: ${JSON.stringify(llmResponse)}`);

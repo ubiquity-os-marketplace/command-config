@@ -2,6 +2,7 @@ import type { ChatCompletion, ChatCompletionMessageParam } from "openai/resource
 import { callLlm } from "./call-llm";
 import { stripCodeFences } from "../../helpers/strip-code-fences";
 import { validateYamlContent } from "../../helpers/validator";
+import { toConfigPluginKey } from "../../helpers/plugin-alias";
 import { Manifest } from "../../types/github";
 import { Context } from "../../types/index";
 
@@ -78,9 +79,10 @@ The YAML parser that will be used to validate your output is shown below. Ensure
       Object.entries(manifests)
         .map(([name, manifest]) => {
           this._context.logger.debug(`Manifest: ${JSON.stringify(manifest)}`);
+          const pluginKey = toConfigPluginKey(name, manifest);
           return `### ${manifest.name} - Start
 
-KEY: ${manifest.homepage_url ?? name.replace(/\/(?=[^/]*$)/, "@")}
+KEY: ${pluginKey}
 
 \`\`\`json
 ${JSON.stringify(manifest)}
