@@ -8,4 +8,6 @@ export type SupportedEvents = "issue_comment.created" | "pull_request_review_com
 
 export type Context<T extends SupportedEvents = SupportedEvents> = PluginContext<PluginSettings, Env, Command, T> & {
   adapters: ReturnType<typeof createAdapters>;
+  authToken?: string;
+  ubiquityKernelToken?: string;
 };

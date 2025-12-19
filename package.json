@@ -33,6 +33,7 @@
     "open-source"
   ],
   "dependencies": {
+    "@actions/github": "^6.0.1",
     "@octokit/webhooks": "^14.0.2",
     "@sinclair/typebox": "0.34.41",
     "@types/js-yaml": "^4.0.9",
