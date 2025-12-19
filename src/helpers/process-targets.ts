@@ -148,9 +148,10 @@ export async function processTargetRepos(
     });
   }
 
-  const isPureInstall =
-    installKeys.length > 0 &&
-    /^(?:\s*(?:install|add|enable)\s+\S+)(?:\s*(?:,|and)\s*(?:install|add|enable)\s+\S+)*\s*$/i.test(expanded.expandedInstruction.trim());
+  const normalizedInstruction = expanded.expandedInstruction.trim();
+  const doesStartWithInstallVerb = /^(?:install|add|enable)\b/i.test(normalizedInstruction);
+  const doesMentionOtherMutations = /\b(?:remove|disable|uninstall|delete|set|change|update)\b/i.test(normalizedInstruction);
+  const isPureInstall = installKeys.length > 0 && doesStartWithInstallVerb && !doesMentionOtherMutations;
 
   if (isPureInstall) {
     const patched = ensurePluginsInstalledInYaml(currentFileContents, installKeys);
