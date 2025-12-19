@@ -44,7 +44,7 @@ type KernelAuthedContext = {
 };
 
 export async function callLlm(options: LlmCallOptions, context: KernelAuthedContext): Promise<ChatCompletion | AsyncIterable<ChatCompletionChunk>> {
-  const authToken = context.authToken;
+  const authToken = String(context.authToken ?? "").trim();
   const payload = (context.payload ?? context.eventPayload) as unknown as {
     repository?: { owner?: { login?: string }; name?: string };
     installation?: { id?: number };
@@ -56,11 +56,7 @@ export async function callLlm(options: LlmCallOptions, context: KernelAuthedCont
 
   if (!authToken) throw new Error("Missing authToken in inputs");
 
-  const isKernelTokenRequired = authToken.trim().startsWith("gh");
   const ubiquityKernelToken = context.ubiquityKernelToken;
-  if (isKernelTokenRequired && !ubiquityKernelToken) {
-    throw new Error("Missing ubiquityKernelToken in inputs (kernel attestation is required for GitHub auth)");
-  }
 
   const { baseUrl, model, stream: isStream, messages, ...rest } = options;
   const url = `${getAiBaseUrl({ ...options, baseUrl })}/v1/chat/completions`;
