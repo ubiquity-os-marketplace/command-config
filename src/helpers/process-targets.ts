@@ -33,6 +33,16 @@ function extractInstallPluginKeys(instruction: string): string[] {
   return [...new Set(keys)];
 }
 
+function normalizeInstallInstruction(instruction: string): string {
+  const trimmed = instruction.trim();
+  if (!trimmed) return instruction;
+  if (/^(?:install|add|enable)\b/i.test(trimmed)) return instruction;
+  if (/^https?:\/\/\S+$/i.test(trimmed)) return `install ${trimmed}`;
+  if (/^[\w.-]+\/[\w.-]+(?:@[^\s]+)?$/.test(trimmed)) return `install ${trimmed}`;
+  if (/^[\w.-]+(?:@[^\s]+)?$/.test(trimmed)) return `install ${trimmed}`;
+  return instruction;
+}
+
 function findPluginsLineIndex(lines: readonly string[]): number {
   return lines.findIndex((line) => /^plugins:\s*(#.*)?$/.test(line));
 }
@@ -125,7 +135,7 @@ export async function processTargetRepos(
 
   context.logger.info(`Prompt: ${prompt}`);
   const aliasIndex = buildPluginAliasIndex(manifestStore ?? {});
-  const expanded = expandPluginInstallShorthand(editorInstruction, aliasIndex);
+  const expanded = expandPluginInstallShorthand(normalizeInstallInstruction(editorInstruction), aliasIndex);
   const installKeys = extractInstallPluginKeys(expanded.expandedInstruction);
   if (expanded.replacements.length) {
     context.logger.info("Expanded plugin shorthand in editor instruction.", {
