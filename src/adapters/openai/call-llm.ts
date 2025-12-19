@@ -36,12 +36,50 @@ function getAiBaseUrl(options: LlmCallOptions): string {
   return "https://ai.ubq.fi";
 }
 
+function getAiFallbackBaseUrl(options: LlmCallOptions): string | null {
+  const envFallback = getEnvString("UBQ_AI_FALLBACK_BASE_URL") || getEnvString("UBQ_AI_FALLBACK_URL");
+  if (envFallback) return normalizeBaseUrl(envFallback);
+
+  const primary = getAiBaseUrl(options);
+  const defaultFallback = "https://ai-ubq-fi.deno.dev";
+  return primary === defaultFallback ? null : defaultFallback;
+}
+
 type KernelAuthedContext = {
   authToken?: string;
   ubiquityKernelToken?: string;
   payload?: unknown;
   eventPayload?: unknown;
 };
+
+async function postToFirstHealthyUrl(urls: string[], init: RequestInit): Promise<Response> {
+  let lastHttpStatus: number | null = null;
+  let lastHttpBody: string | null = null;
+  let lastNetworkError: string | null = null;
+
+  for (const url of urls) {
+    let response: Response;
+    try {
+      response = await fetch(url, init);
+    } catch (error) {
+      lastNetworkError = error instanceof Error ? error.message : String(error);
+      continue;
+    }
+
+    if (response.ok) return response;
+
+    lastHttpStatus = response.status;
+    lastHttpBody = await response.text();
+
+    const shouldTryFallback = response.status >= 500 || response.status === 403;
+    if (!shouldTryFallback) break;
+  }
+
+  if (lastHttpStatus !== null) {
+    throw new Error(`LLM API error: ${lastHttpStatus} - ${lastHttpBody ?? ""}`);
+  }
+  throw new Error(`LLM API error: ${lastNetworkError ?? "Unknown error"}`);
+}
 
 export async function callLlm(options: LlmCallOptions, context: KernelAuthedContext): Promise<ChatCompletion | AsyncIterable<ChatCompletionChunk>> {
   const authToken = String(context.authToken ?? "").trim();
@@ -81,11 +119,10 @@ export async function callLlm(options: LlmCallOptions, context: KernelAuthedCont
     headers["X-Ubiquity-Kernel-Token"] = ubiquityKernelToken;
   }
 
-  const response = await fetch(url, { method: "POST", headers, body });
-  if (!response.ok) {
-    const err = await response.text();
-    throw new Error(`LLM API error: ${response.status} - ${err}`);
-  }
+  const fallbackBaseUrl = getAiFallbackBaseUrl({ ...options, baseUrl });
+  const urlsToTry = [url, ...(fallbackBaseUrl ? [`${fallbackBaseUrl}/v1/chat/completions`] : [])];
+
+  const response = await postToFirstHealthyUrl(urlsToTry, { method: "POST", headers, body });
 
   if (isStream) {
     if (!response.body) {
