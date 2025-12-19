@@ -5,6 +5,50 @@ import { getFileContent } from "./get-file-content";
 import { checkOrgPermissions, checkUserRepoPermissions } from "./user-permission";
 
 const LOCAL_CONFIG_FULL_PATH = ".github/.ubiquity-os.config.local.yml";
+const VALID_CONFIG_SUFFIX = /^[a-z0-9][a-z0-9_-]*$/i;
+
+function readString(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
+function getConfigPathCandidatesFromSettings(context: Context): string[] {
+  const maybeCandidates = (context.config as Record<string, unknown>).configPathCandidates;
+  if (Array.isArray(maybeCandidates) && maybeCandidates.every((item) => typeof item === "string" && item.trim().length > 0)) {
+    return maybeCandidates;
+  }
+  return [];
+}
+
+function getFallbackConfigPathCandidates(context: Context): string[] {
+  const environment = readString((context.config as Record<string, unknown>).environment)
+    .trim()
+    .toLowerCase();
+  const configPath = context.config.configPath;
+  const devConfigPath = context.config.devConfigPath;
+
+  if (!environment) return [devConfigPath, configPath];
+  if (environment === "production" || environment === "prod") return [configPath];
+
+  const suffix = environment === "development" ? "dev" : environment;
+  if (suffix === "dev") return [devConfigPath, configPath];
+  if (!VALID_CONFIG_SUFFIX.test(suffix)) return [devConfigPath, configPath];
+
+  const derived = suffix === "local" ? LOCAL_CONFIG_FULL_PATH : `.github/.ubiquity-os.config.${suffix}.yml`;
+  return derived === configPath ? [configPath] : [derived, configPath];
+}
+
+function getConfigPathCandidates(context: Context): string[] {
+  const fromKernel = getConfigPathCandidatesFromSettings(context);
+  if (fromKernel.length) return fromKernel;
+  return getFallbackConfigPathCandidates(context);
+}
+
+function getTargetTypeForConfigPath(context: Context, filePath: string): string {
+  if (filePath === LOCAL_CONFIG_FULL_PATH) return "local";
+  if (filePath === context.config.devConfigPath) return "dev";
+  if (filePath === context.config.configPath) return "config";
+  return "config";
+}
 
 async function tryGetRepoConfigFile(context: Context, owner: string, repo: string, filePath: string, label: string): Promise<string | undefined> {
   try {
@@ -52,61 +96,39 @@ async function processBaseTargets(context: Context): Promise<Record<string, Targ
   return targetMap;
 }
 
-async function processRepoConfigs(
-  context: Context,
-  targetMap: Record<string, Target>
-): Promise<{ repoConfig: string | undefined; repoDevConfig: string | undefined; repoLocalConfig: string | undefined }> {
-  const { payload, config } = context;
+async function processRepoConfigs(context: Context, targetMap: Record<string, Target>): Promise<{ repoConfig: string | undefined }> {
+  const { payload } = context;
   const repoOwner = payload.repository.owner.login;
   const repoName = payload.repository.name;
 
-  const repoConfig = await tryGetRepoConfigFile(context, repoOwner, repoName, config.configPath, "Config");
-  const repoDevConfig = await tryGetRepoConfigFile(context, repoOwner, repoName, config.devConfigPath, "Dev");
-  const repoLocalConfig = await tryGetRepoConfigFile(context, repoOwner, repoName, LOCAL_CONFIG_FULL_PATH, "Local");
+  const baseRepoTarget = {
+    owner: repoOwner,
+    repo: repoName,
+    localDir: path.join(repoOwner, repoName),
+    url: `https://github.com/${repoOwner}/${repoName}.git`,
+    readonly: false,
+  } satisfies Omit<Target, "type" | "filePath">;
 
-  if (repoConfig || repoDevConfig || repoLocalConfig) {
-    const baseRepoTarget = {
-      owner: repoOwner,
-      repo: repoName,
-      localDir: path.join(repoOwner, repoName),
-      url: `https://github.com/${repoOwner}/${repoName}.git`,
-      readonly: false,
-    } satisfies Omit<Target, "type" | "filePath">;
+  for (const candidate of getConfigPathCandidates(context)) {
+    const repoConfig = await tryGetRepoConfigFile(context, repoOwner, repoName, candidate, "Config");
+    if (!repoConfig) continue;
 
-    if (repoConfig) {
-      const repoTarget: Target = {
-        type: "config",
-        ...baseRepoTarget,
-        filePath: config.configPath,
-      };
-      targetMap[buildIdForTarget(repoTarget)] = repoTarget;
-    }
-
-    if (repoDevConfig) {
-      const repoDevTarget: Target = {
-        type: "dev",
-        ...baseRepoTarget,
-        filePath: config.devConfigPath,
-      };
-      targetMap[buildIdForTarget(repoDevTarget)] = repoDevTarget;
-    }
-
-    if (repoLocalConfig) {
-      const repoLocalTarget: Target = {
-        type: "local",
-        ...baseRepoTarget,
-        filePath: LOCAL_CONFIG_FULL_PATH,
-      };
-      targetMap[buildIdForTarget(repoLocalTarget)] = repoLocalTarget;
-    }
+    const repoTarget: Target = {
+      type: getTargetTypeForConfigPath(context, candidate),
+      ...baseRepoTarget,
+      filePath: candidate,
+    };
+    targetMap[buildIdForTarget(repoTarget)] = repoTarget;
+    return { repoConfig };
   }
 
-  return { repoConfig, repoDevConfig, repoLocalConfig };
+  return { repoConfig: undefined };
 }
 
 async function getConfig(context: Context, orgName: string, repoName: string, configPath: string) {
   try {
     const content = await getFileContent(context, orgName, repoName, configPath);
+    if (!content) return null;
     return { content, configPath };
   } catch {
     return null;
@@ -123,12 +145,13 @@ async function processOrgConfig(context: Context, targetMap: Record<string, Targ
   }
 
   try {
-    // Try to get org level configs
-    const orgConfig = (
-      await Promise.all([getConfig(context, orgName, ".ubiquity-os", config.devConfigPath), getConfig(context, orgName, ".ubiquity-os", config.configPath)])
-    )
-      .filter((o) => !!o)
-      .shift();
+    let orgConfig: { content: string; configPath: string } | null = null;
+    for (const candidate of getConfigPathCandidates(context)) {
+      orgConfig = await getConfig(context, orgName, ".ubiquity-os", candidate);
+      if (orgConfig?.content) {
+        break;
+      }
+    }
 
     if (!orgConfig?.content) {
       logger.info("No configuration found at repository or organization level.");
@@ -156,9 +179,9 @@ async function processOrgConfig(context: Context, targetMap: Record<string, Targ
 export async function targetBuilder(context: Context): Promise<Record<string, Target>> {
   try {
     const targetMap: Record<string, Target> = {};
-    const { repoConfig, repoDevConfig, repoLocalConfig } = await processRepoConfigs(context, targetMap);
+    const { repoConfig } = await processRepoConfigs(context, targetMap);
 
-    if (!(repoConfig || repoDevConfig || repoLocalConfig)) {
+    if (!repoConfig) {
       await processOrgConfig(context, targetMap);
     }
 
