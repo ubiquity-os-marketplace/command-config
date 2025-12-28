@@ -1,5 +1,5 @@
 import type { ChatCompletion, ChatCompletionMessageParam } from "openai/resources/chat/completions";
-import { callLlm } from "./call-llm";
+import { callLlm } from "@ubiquity-os/plugin-sdk";
 import { stripCodeFences } from "../../helpers/strip-code-fences";
 import { validateYamlContent } from "../../helpers/validator";
 import { toConfigPluginKey } from "../../helpers/plugin-alias";
