@@ -181,8 +181,32 @@ export const handlers = [
       repo: params.repo as string,
       number: prNumber,
       html_url: `https://github.com/${params.owner}/${params.repo}/pull/${prNumber}`,
+      merged: false,
     });
     return HttpResponse.json(newPull);
+  }),
+  // Merge pull request
+  http.put("https://api.github.com/repos/:owner/:repo/pulls/:pull_number/merge", ({ params }) => {
+    const pullNumber = Number(params.pull_number);
+    const existing = db.pulls.findFirst({
+      where: {
+        owner: { equals: params.owner as string },
+        repo: { equals: params.repo as string },
+        number: { equals: pullNumber },
+      },
+    });
+    if (!existing) {
+      return new HttpResponse(null, { status: 404 });
+    }
+    db.pulls.update({
+      where: { id: { equals: existing.id } },
+      data: { merged: true },
+    });
+    return HttpResponse.json({
+      merged: true,
+      message: "Pull Request successfully merged",
+      sha: "merged-sha",
+    });
   }),
 ];
 

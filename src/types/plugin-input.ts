@@ -12,6 +12,7 @@ export const pluginSettingsSchema = T.Object(
     parserPath: T.String({ default: "https://github.com/ubiquity-os/ubiquity-os-kernel.git" }),
     configPath: T.String({ default: ".github/.ubiquity-os.config.yml" }),
     devConfigPath: T.String({ default: ".github/.ubiquity-os.config.dev.yml" }),
+    autoMerge: T.Boolean({ default: false }),
     defaultTargets: T.Array(
       T.Object({
         name: T.String({ default: "https://github.com/ubiquity-os/.ubiquity-os.git" }),

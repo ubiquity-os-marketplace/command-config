@@ -65,6 +65,22 @@ describe("Plugin tests", () => {
       expect(pulls[0].html_url).toMatch(/https:\/\/github.com\//);
     });
 
+    it("Should auto-merge pull requests when enabled", async () => {
+      const { context } = createContext("/config update dependencies", 1, 1, 1, 1, { autoMerge: true });
+      context.command = {
+        name: "config",
+        parameters: {
+          editorInstruction: "update dependencies",
+        },
+      };
+
+      await runPlugin(context);
+      const pulls = db.pulls.getAll();
+
+      expect(pulls.length).toBe(1);
+      expect(pulls[0].merged).toBe(true);
+    });
+
     it("Should handle missing editor instructions", async () => {
       const { context } = createContext("/config");
       try {
@@ -87,7 +103,14 @@ describe("Plugin tests", () => {
  *
  * Refactor according to your needs.
  */
-function createContext(commentBody: string = "/Hello", repoId: number = 1, payloadSenderId: number = 1, commentId: number = 1, issueOne: number = 1) {
+function createContext(
+  commentBody: string = "/Hello",
+  repoId: number = 1,
+  payloadSenderId: number = 1,
+  commentId: number = 1,
+  issueOne: number = 1,
+  configOverrides: Partial<Context["config"]> = {}
+) {
   const repo = db.repo.findFirst({ where: { id: { equals: repoId } } }) as unknown as Context["payload"]["repository"];
   const sender = db.users.findFirst({ where: { id: { equals: payloadSenderId } } }) as unknown as Context["payload"]["sender"];
   const issue1 = db.issue.findFirst({ where: { id: { equals: issueOne } } }) as unknown as Context<"issue_comment.created">["payload"]["issue"];
@@ -95,7 +118,7 @@ function createContext(commentBody: string = "/Hello", repoId: number = 1, paylo
   createComment(commentBody, commentId); // create it first then pull it from the DB and feed it to _createContext
   const comment = db.issueComments.findFirst({ where: { id: { equals: commentId } } }) as unknown as Context["payload"]["comment"];
 
-  const context = createContextInner(repo, sender, issue1, comment);
+  const context = createContextInner(repo, sender, issue1, comment, configOverrides);
   const infoSpy = jest.spyOn(context.logger, "info");
   const errorSpy = jest.spyOn(context.logger, "error");
   const debugSpy = jest.spyOn(context.logger, "debug");
@@ -123,7 +146,8 @@ function createContextInner(
   repo: Context["payload"]["repository"],
   sender: Context["payload"]["sender"],
   issue: Context<"issue_comment.created">["payload"]["issue"],
-  comment: Context["payload"]["comment"]
+  comment: Context["payload"]["comment"],
+  configOverrides: Partial<Context["config"]>
 ) {
   return {
     eventName: "issue_comment.created",
@@ -144,7 +168,9 @@ function createContextInner(
       parserPath: `https://github.com/${STRINGS.USER_1}/ubiquity-os-kernel.git`,
       configPath: ".github/.ubiquity-os.config.yml",
       devConfigPath: ".github/.ubiquity-os.config.dev.yml",
+      autoMerge: false,
       defaultTargets: [{ name: `https://github.com/${STRINGS.USER_1}/.ubiquity-os.git`, branch: "main", type: "dev" }],
+      ...configOverrides,
     },
     env: {} as Env,
     octokit: octokit,
