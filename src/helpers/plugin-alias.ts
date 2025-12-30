@@ -63,6 +63,7 @@ function addAliasesFromManifestName(name: string, canonical: string, add: AddAli
   add(trimmed, canonical);
 }
 
+/** @public */
 export function buildPluginAliasIndex(manifestStore: Record<string, Manifest>): PluginAliasIndex {
   const aliases = new Map<string, Set<string>>();
 
@@ -119,6 +120,7 @@ export type ExpandResult = Readonly<{
   ambiguous: ReadonlyArray<{ name: string; candidates: readonly string[] }>;
 }>;
 
+/** @public */
 export function expandPluginInstallShorthand(instruction: string, index: PluginAliasIndex): ExpandResult {
   const replacements: { from: string; to: string }[] = [];
   const ambiguous: { name: string; candidates: readonly string[] }[] = [];
