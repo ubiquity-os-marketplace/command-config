@@ -19,7 +19,7 @@
     "type": "object",
     "properties": {
       "baseUrl": {
-        "default": "https://openrouter.ai/api/v1",
+        "default": "https://ai-ubq-fi.deno.dev",
         "type": "string"
       },
       "parserPath": {
