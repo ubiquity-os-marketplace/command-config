@@ -187,8 +187,9 @@ The output is validated; if invalid, it will be rejected and retried.`,
         return this._toAnswer(completionResponse, completion, attempts);
       }
 
-      lastError = validation.error;
-      this._handleInvalidYaml(attempts, maxRetries, validation.error, completion);
+      const errorMessage = validation.error ?? "Unknown YAML validation error";
+      lastError = errorMessage;
+      this._handleInvalidYaml(attempts, maxRetries, errorMessage, completion);
     }
 
     // This should never be reached due to the throw above, but TypeScript needs it

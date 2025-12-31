@@ -125,7 +125,7 @@ export function expandPluginInstallShorthand(instruction: string, index: PluginA
   const replacements: { from: string; to: string }[] = [];
   const ambiguous: { name: string; candidates: readonly string[] }[] = [];
 
-  const pattern = /\b(install|add|enable)\s+(?<name>[a-z0-9][a-z0-9-_]*)(?:@(?<ref>[a-z0-9][a-z0-9-._/]*))?\b/gi;
+  const pattern = /\b(install|add|enable)\s+(?<name>[A-Za-z0-9][A-Za-z0-9-_]*)(?:@(?<ref>[A-Za-z0-9][A-Za-z0-9-._/]*))?\b/gi;
 
   const expandedInstruction = instruction.replace(pattern, (match, verb: string, nameValue: string, refValue: string | undefined) => {
     const name = String(nameValue ?? "").trim();
