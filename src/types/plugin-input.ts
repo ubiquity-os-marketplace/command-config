@@ -9,7 +9,7 @@ import { StaticDecode, Type as T } from "@sinclair/typebox";
  */
 export const pluginSettingsSchema = T.Object(
   {
-    baseUrl: T.String({ default: "https://openrouter.ai/api/v1" }),
+    baseUrl: T.String({ default: "https://ai-ubq-fi.deno.dev" }),
     parserPath: T.String({ default: "https://github.com/ubiquity-os/ubiquity-os-kernel.git" }),
     configPath: T.String({ default: ".github/.ubiquity-os.config.yml" }),
     devConfigPath: T.String({ default: ".github/.ubiquity-os.config.dev.yml" }),
