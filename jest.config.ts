@@ -20,6 +20,7 @@ const cfg: Config = {
   extensionsToTreatAsEsm: [".ts"],
   moduleNameMapper: {
     "^(\\.{1,2}/.*)\\.js$": "$1",
+    "^until-async$": "<rootDir>/tests/__mocks__/until-async.cjs",
   },
   setupFilesAfterEnv: ["dotenv/config"],
 };
