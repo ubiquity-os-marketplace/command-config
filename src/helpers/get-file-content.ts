@@ -15,7 +15,7 @@ export async function getFileContent(context: Context, owner: string, repo: stri
 
   // Check if data is an array or doesn't have content property
   if (Array.isArray(response.data) || !("content" in response.data)) {
-    throw logger.error(`File content not available for: ${path}`);
+    throw logger.warn(`File content not available for: ${path}`);
   }
 
   // Decode and return the content

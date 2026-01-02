@@ -124,7 +124,7 @@ The output is validated; if invalid, it will be rejected and retried.`,
 
       const completionResponse: ChatCompletion = response;
       const rawCompletion = completionResponse.choices?.[0]?.message?.content;
-      if (!rawCompletion) throw this._context.logger.warn("No completion generated");
+      if (!rawCompletion) throw this._context.logger.error("No completion generated");
 
       const completion = stripCodeFences(String(rawCompletion));
 
@@ -147,7 +147,7 @@ The output is validated; if invalid, it will be rejected and retried.`,
       }
 
       lastError = validation.error;
-      this._context.logger.warn(`Invalid YAML on attempt ${attempts}/${maxRetries}: ${validation.error}`, {
+      this._context.logger.error(`Invalid YAML on attempt ${attempts}/${maxRetries}: ${validation.error}`, {
         completion,
       });
 

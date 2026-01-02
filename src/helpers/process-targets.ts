@@ -27,11 +27,11 @@ export async function processTargetRepos(
   // Build Prompt
   const { adapters } = context;
   const prompt = adapters.llm.completions.promptBuilder(currentFileContents, manifestStore ?? {}, target.url);
-  context.logger.debug("Built prompt for YAML editor.", { chars: prompt.length });
+  context.logger.info("Built prompt for YAML editor.", { chars: prompt.length });
 
   // Update the file with the new content by making a LLM call
   const llmResponse = await adapters.llm.completions.createCompletions(prompt, editorInstruction.trim());
-  context.logger.debug("LLM response received.", { attempts: llmResponse.metadata.attempts, outputChars: llmResponse.text.length });
+  context.logger.info("LLM response received.", { attempts: llmResponse.metadata.attempts, outputChars: llmResponse.text.length });
 
   const updatedFileContents = extractYamlOnly(llmResponse.text);
 
@@ -47,18 +47,18 @@ export async function processTargetRepos(
   }
 
   if (formattedFileContents.trim() === currentFileContents.trim()) {
-    context.logger.warn("No change was triggered by the instruction.");
+    context.logger.debug("No change was triggered by the instruction.");
     return undefined;
   }
 
   const { pullRequestUrl } = await applyChanges(target, formattedFileContents, context, editorInstruction);
-  context.logger.info(`Pull request created: ${pullRequestUrl}`);
+  context.logger.ok(`Pull request created: ${pullRequestUrl}`);
   return pullRequestUrl;
 }
 
 export async function fetchAndParseFileContent(context: Context, target: Target, manifestStore?: Record<string, Manifest>) {
   const currentFileContents = await getFileContent(context, target.owner, target.repo, target.filePath);
-  if (!currentFileContents) throw context.logger.error("File content not found. for target: " + JSON.stringify(target));
+  if (!currentFileContents) throw context.logger.warn("File content not found. for target: " + JSON.stringify(target));
 
   // Parse Config
   const parsedUrls = parseConfig(currentFileContents, context.logger);

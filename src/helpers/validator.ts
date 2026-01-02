@@ -9,7 +9,7 @@ export function parseConfig(yamlContent: string, logger: Context["logger"]): Plu
     Value.Cast(configReadSchema, yaml.load(yamlContent)); // Validate schema
     return parsePluginLocations(yamlContent, logger);
   } catch (error) {
-    logger.error("Failed to parse YAML content", { stack: error instanceof Error ? error.stack : String(error) });
+    logger.warn("Failed to parse YAML content", { stack: error instanceof Error ? error.stack : String(error) });
     return [];
   }
 }
@@ -51,7 +51,7 @@ export function parseYaml(data: null | string, logger: Context["logger"]) {
     const parsedData = yaml.load(data);
     return { yaml: parsedData ?? null, errors: null };
   } catch (error) {
-    logger.error("Error parsing YAML", { stack: error instanceof Error ? error.stack : String(error) });
+    logger.warn("Error parsing YAML", { stack: error instanceof Error ? error.stack : String(error) });
     return { errors: [error] as YAMLError[], yaml: null };
   }
 }
@@ -76,7 +76,7 @@ export function parsePluginIdentifier(value: string): string | PluginLocation {
 export function parsePluginLocations(yamlContent: string, logger: Context["logger"]): PluginLocation[] {
   const { yaml: parsedYaml, errors } = parseYaml(yamlContent, logger);
   if (errors) {
-    logger.error("Failed to parse YAML content:" + errors.map((error) => error.message).join(", "));
+    logger.warn("Failed to parse YAML content:" + errors.map((error) => error.message).join(", "));
     return [];
   }
 

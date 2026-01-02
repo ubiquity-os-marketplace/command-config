@@ -19,7 +19,7 @@ export async function syncAgent(editorInstruction: string, context: Context): Pr
   try {
     await fetchMarketplacePluginRegistry(context, manifestStore);
   } catch (error) {
-    logger.warn(`Error fetching marketplace plugin registry`, {
+    logger.error(`Error fetching marketplace plugin registry`, {
       err: error,
     });
   }
@@ -34,7 +34,7 @@ export async function syncAgent(editorInstruction: string, context: Context): Pr
     }
   }
 
-  logger.debug("Manifest store ready", { count: Object.keys(manifestStore).length });
+  logger.info("Manifest store ready", { count: Object.keys(manifestStore).length });
   // Run the Repo Config Extractor on the targets (by this point we know the sender has permissions to the targets)
   for (const target of Object.values(targets)) {
     if (target.readonly) continue;

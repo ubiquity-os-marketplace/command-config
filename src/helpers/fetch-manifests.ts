@@ -6,7 +6,7 @@ export async function fetchManifests(pluginLocations: PluginLocation[], manifest
   const manifests: Manifest[] = [];
 
   for (const plugin of pluginLocations) {
-    context.logger.debug(`Trying to fetch manifest`, {
+    context.logger.info(`Trying to fetch manifest`, {
       plugin: plugin,
     });
     const manifest = await fetchManifest(plugin, manifestCache, context);

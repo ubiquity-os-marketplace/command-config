@@ -23,7 +23,7 @@ export async function applyChanges(
             repo: target.repo,
             pullNumber: pullRequestNumber,
           });
-          context.logger.info(`Auto-merged pull request: ${pullRequestUrl}`);
+          context.logger.ok(`Auto-merged pull request: ${pullRequestUrl}`);
         } catch (error) {
           context.logger.error("Auto-merge failed; leaving pull request open.", {
             stack: error instanceof Error ? error.message : String(error),
@@ -35,7 +35,7 @@ export async function applyChanges(
       }
     }
 
-    context.logger.info(`Created pull request: ${pullRequestUrl}`);
+    context.logger.ok(`Created pull request: ${pullRequestUrl}`);
 
     return {
       pullRequestUrl,

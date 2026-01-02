@@ -134,5 +134,5 @@ export async function fetchMarketplacePluginRegistry(context: Context, manifestS
     manifestStore[parsedEntry.cacheKey] = parsedEntry.manifest;
   }
 
-  context.logger.info("Loaded marketplace plugin registry", { count: Object.keys(manifestStore).length });
+  context.logger.ok("Loaded marketplace plugin registry", { count: Object.keys(manifestStore).length });
 }

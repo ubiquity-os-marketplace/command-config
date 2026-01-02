@@ -4,7 +4,7 @@ export async function checkUserRepoPermissions(context: Context, owner: string, 
   const { octokit, logger } = context;
   const sender = context.payload.comment.user?.login;
   if (!sender) {
-    throw logger.error("Sender not found in payload.");
+    throw logger.warn("Sender not found in payload.");
   }
   const permissions = await octokit.rest.repos.getCollaboratorPermissionLevel({
     owner,
@@ -23,14 +23,14 @@ export async function checkUserPermissions(context: Context, owner?: string, rep
   const sender = payload.comment.user?.login;
 
   if (!sender) {
-    throw logger.error("Sender not found in payload.");
+    throw logger.warn("Sender not found in payload.");
   }
 
   // Extract repository or organization information
   const repository = payload.repository;
   if (!owner || !repo) {
     if (!repository) {
-      throw logger.error("Repository not found in payload.");
+      throw logger.warn("Repository not found in payload.");
     }
     owner = repository.organization?.login || repository.owner.login;
     repo = repository.name;
@@ -45,14 +45,14 @@ export async function checkOrgPermissions(context: Context, owner?: string, repo
   const { octokit, logger, payload } = context;
   const sender = context.payload.comment.user?.login;
   if (!sender) {
-    throw logger.error("Sender not found in payload.");
+    throw logger.warn("Sender not found in payload.");
   }
 
   // Extract repository or organization information
   const repository = payload.repository;
   if (!owner) {
     if (!repository) {
-      throw logger.error("Repository not found in payload.");
+      throw logger.warn("Repository not found in payload.");
     }
     owner = repository.organization?.login || repository.owner.login;
   }

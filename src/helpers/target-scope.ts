@@ -54,7 +54,7 @@ async function tryGetRepoConfigFile(context: Context, owner: string, repo: strin
   try {
     return await getFileContent(context, owner, repo, filePath);
   } catch (error: unknown) {
-    context.logger.info(
+    context.logger.debug(
       `${label} config file not found in repo: ${owner}/${repo}/${filePath}. Error: ${error instanceof Error ? error.message : String(error)}`
     );
     return undefined;
@@ -69,7 +69,7 @@ async function processBaseTargets(context: Context): Promise<Record<string, Targ
   for (const target of config.defaultTargets) {
     const match = RegExp(/github\.com\/([^/]+)\/([^/]+)(\.git)?$/).exec(target.name);
     if (!match) {
-      throw logger.error(`Invalid GitHub URL: ${target.name}`);
+      throw logger.warn(`Invalid GitHub URL: ${target.name}`);
     }
     const owner = match[1];
     const repo = match[2].replace(".git", "");
@@ -141,7 +141,7 @@ async function processOrgConfig(context: Context, targetMap: Record<string, Targ
   let filePath = config.configPath;
 
   if (!orgName) {
-    throw logger.error("Organization not found in payload.");
+    throw logger.warn("Organization not found in payload.");
   }
 
   try {
@@ -154,7 +154,7 @@ async function processOrgConfig(context: Context, targetMap: Record<string, Targ
     }
 
     if (!orgConfig?.content) {
-      logger.info("No configuration found at repository or organization level.");
+      logger.debug("No configuration found at repository or organization level.");
       return;
     }
 
@@ -172,7 +172,7 @@ async function processOrgConfig(context: Context, targetMap: Record<string, Targ
 
     targetMap[buildIdForTarget(orgRepoTarget)] = orgRepoTarget;
   } catch (error: unknown) {
-    logger.info(`Organization config file not found: ${orgName}/.ubiquity-os/${filePath}. Error: ${error instanceof Error ? error.message : String(error)}`);
+    logger.debug(`Organization config file not found: ${orgName}/.ubiquity-os/${filePath}. Error: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -191,7 +191,7 @@ export async function targetBuilder(context: Context): Promise<Record<string, Ta
 
     return targetMap;
   } catch (error: unknown) {
-    context.logger.info(`Error accessing configurations: ${error || "Unknown error"}`);
+    context.logger.error(`Error accessing configurations: ${error || "Unknown error"}`);
     return {};
   }
 }

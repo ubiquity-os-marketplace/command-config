@@ -16,5 +16,5 @@ export async function runPlugin(context: Context) {
     return await syncConfigs(context);
   }
 
-  logger.error(`Unsupported event: ${eventName}`);
+  logger.warn(`Unsupported event: ${eventName}`);
 }
