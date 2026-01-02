@@ -6,7 +6,9 @@ export async function syncConfigs(context: Context) {
   const { payload, logger, eventName, commentHandler } = context;
 
   if (payload.comment.user?.type === "Bot") {
-    throw logger.debug("Comment is from a bot. Skipping.");
+    const message = "Comment is from a bot. Skipping.";
+    logger.debug(message);
+    throw new Error(message);
   }
 
   // Fetch the Editor Instruction
@@ -22,14 +24,18 @@ export async function syncConfigs(context: Context) {
   if (eventName === "pull_request_review_comment.created") {
     // eslint-disable-next-line
     // TODO: Implement Pull Request Review Comment Support
-    throw logger.warn("This is a pull request, not supported for now");
+    const message = "This is a pull request, not supported for now";
+    logger.warn(message);
+    throw new Error(message);
   }
 
   // Check user permissions before proceeding allow only if (admin || write)
   // eslint-disable-next-line
   // TODO: Handle Privacy Settings for user
   if (!(await checkUserPermissions(context))) {
-    throw logger.warn("User does not have the required permissions. Skipping.");
+    const message = "User does not have the required permissions. Skipping.";
+    logger.warn(message);
+    throw new Error(message);
   }
 
   const prUrls = await syncAgent(editorInstruction, context);
@@ -55,7 +61,9 @@ function extractEditorInstruction(context: Context): { editorInstruction: string
   if (command && command.name === "config") {
     const editorInstruction = command.parameters.editor_instruction ?? command.parameters.editorInstruction;
     if (typeof editorInstruction !== "string" || editorInstruction.trim() === "") {
-      throw logger.warn("Editor instruction cannot be empty. Please provide editing instructions.");
+      const message = "Editor instruction cannot be empty. Please provide editing instructions.";
+      logger.warn(message);
+      throw new Error(message);
     }
     return { editorInstruction };
   }
@@ -63,7 +71,9 @@ function extractEditorInstruction(context: Context): { editorInstruction: string
   if (body.startsWith("/config")) {
     const editorInstruction = body.slice("/config".length).trim();
     if (!editorInstruction) {
-      throw logger.warn("Editor instruction cannot be empty. Please provide editing instructions.");
+      const message = "Editor instruction cannot be empty. Please provide editing instructions.";
+      logger.warn(message);
+      throw new Error(message);
     }
     return { editorInstruction };
   }

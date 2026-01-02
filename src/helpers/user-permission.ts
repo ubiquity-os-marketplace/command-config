@@ -4,7 +4,9 @@ export async function checkUserRepoPermissions(context: Context, owner: string, 
   const { octokit, logger } = context;
   const sender = context.payload.comment.user?.login;
   if (!sender) {
-    throw logger.warn("Sender not found in payload.");
+    const message = "Sender not found in payload.";
+    logger.warn(message);
+    throw new Error(message);
   }
   const permissions = await octokit.rest.repos.getCollaboratorPermissionLevel({
     owner,
@@ -23,14 +25,18 @@ export async function checkUserPermissions(context: Context, owner?: string, rep
   const sender = payload.comment.user?.login;
 
   if (!sender) {
-    throw logger.warn("Sender not found in payload.");
+    const message = "Sender not found in payload.";
+    logger.warn(message);
+    throw new Error(message);
   }
 
   // Extract repository or organization information
   const repository = payload.repository;
   if (!owner || !repo) {
     if (!repository) {
-      throw logger.warn("Repository not found in payload.");
+      const message = "Repository not found in payload.";
+      logger.warn(message);
+      throw new Error(message);
     }
     owner = repository.organization?.login || repository.owner.login;
     repo = repository.name;
@@ -45,14 +51,18 @@ export async function checkOrgPermissions(context: Context, owner?: string, repo
   const { octokit, logger, payload } = context;
   const sender = context.payload.comment.user?.login;
   if (!sender) {
-    throw logger.warn("Sender not found in payload.");
+    const message = "Sender not found in payload.";
+    logger.warn(message);
+    throw new Error(message);
   }
 
   // Extract repository or organization information
   const repository = payload.repository;
   if (!owner) {
     if (!repository) {
-      throw logger.warn("Repository not found in payload.");
+      const message = "Repository not found in payload.";
+      logger.warn(message);
+      throw new Error(message);
     }
     owner = repository.organization?.login || repository.owner.login;
   }

@@ -28,24 +28,22 @@ function splitRefAndPath(pathParts: string[], refOverride?: string): { ref?: str
     return { ref: refOverride, path: ensureManifestPath(pathParts.join("/")) };
   }
 
-  const manifestIndex = pathParts.lastIndexOf(MANIFEST_FILENAME);
-  if (manifestIndex >= 0) {
-    const ref = pathParts.slice(0, manifestIndex).join("/") || undefined;
-    const path = ensureManifestPath(pathParts.slice(manifestIndex).join("/"));
-    return { ref, path };
-  }
-
   if (pathParts.length === 0) {
     return { path: MANIFEST_FILENAME };
   }
 
-  if (pathParts.length === 1) {
-    return { ref: pathParts[0], path: MANIFEST_FILENAME };
+  if (pathParts[0] === MANIFEST_FILENAME) {
+    return { path: MANIFEST_FILENAME };
+  }
+
+  const [ref, ...rest] = pathParts;
+  if (rest.length === 0) {
+    return { ref, path: MANIFEST_FILENAME };
   }
 
   return {
-    ref: pathParts[0],
-    path: ensureManifestPath(pathParts.slice(1).join("/")),
+    ref,
+    path: ensureManifestPath(rest.join("/")),
   };
 }
 

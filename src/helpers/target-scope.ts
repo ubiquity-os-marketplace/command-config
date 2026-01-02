@@ -69,7 +69,9 @@ async function processBaseTargets(context: Context): Promise<Record<string, Targ
   for (const target of config.defaultTargets) {
     const match = RegExp(/github\.com\/([^/]+)\/([^/]+)(\.git)?$/).exec(target.name);
     if (!match) {
-      throw logger.warn(`Invalid GitHub URL: ${target.name}`);
+      const message = `Invalid GitHub URL: ${target.name}`;
+      logger.warn(message);
+      throw new Error(message);
     }
     const owner = match[1];
     const repo = match[2].replace(".git", "");
@@ -141,7 +143,9 @@ async function processOrgConfig(context: Context, targetMap: Record<string, Targ
   let filePath = config.configPath;
 
   if (!orgName) {
-    throw logger.warn("Organization not found in payload.");
+    const message = "Organization not found in payload.";
+    logger.warn(message);
+    throw new Error(message);
   }
 
   try {
