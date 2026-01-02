@@ -2,6 +2,101 @@ import { Buffer } from "node:buffer";
 import { Manifest, PluginLocation } from "../types/github";
 import { Context } from "../types/index";
 
+const MANIFEST_FILENAME = "manifest.json";
+const GITHUB_HOST = "github.com";
+const RAW_GITHUB_HOST = "raw.githubusercontent.com";
+
+type GitHubManifestTarget = {
+  owner: string;
+  repo: string;
+  path: string;
+  ref?: string;
+};
+
+function normalizeRepoName(repo: string): string {
+  return repo.replace(/\.git$/i, "");
+}
+
+function ensureManifestPath(path: string): string {
+  const trimmed = path.replace(/^\/+/, "").replace(/\/+$/, "");
+  if (!trimmed) return MANIFEST_FILENAME;
+  return trimmed.endsWith(`/${MANIFEST_FILENAME}`) || trimmed === MANIFEST_FILENAME ? trimmed : `${trimmed}/${MANIFEST_FILENAME}`;
+}
+
+function splitRefAndPath(pathParts: string[], refOverride?: string): { ref?: string; path: string } {
+  if (refOverride) {
+    return { ref: refOverride, path: ensureManifestPath(pathParts.join("/")) };
+  }
+
+  const manifestIndex = pathParts.lastIndexOf(MANIFEST_FILENAME);
+  if (manifestIndex >= 0) {
+    const ref = pathParts.slice(0, manifestIndex).join("/") || undefined;
+    const path = ensureManifestPath(pathParts.slice(manifestIndex).join("/"));
+    return { ref, path };
+  }
+
+  if (pathParts.length === 0) {
+    return { path: MANIFEST_FILENAME };
+  }
+
+  if (pathParts.length === 1) {
+    return { ref: pathParts[0], path: MANIFEST_FILENAME };
+  }
+
+  return {
+    ref: pathParts[0],
+    path: ensureManifestPath(pathParts.slice(1).join("/")),
+  };
+}
+
+function parseGitHubManifestUrl(location: string): GitHubManifestTarget | null {
+  let url: URL;
+  try {
+    url = new URL(location);
+  } catch {
+    return null;
+  }
+
+  const host = url.hostname.toLowerCase();
+  const parts = url.pathname.split("/").filter(Boolean);
+  const refOverride = url.searchParams.get("ref")?.trim() || undefined;
+
+  if (host === RAW_GITHUB_HOST) {
+    if (parts.length < 3) return null;
+    const [owner, repoRaw, ...rest] = parts;
+    const repo = normalizeRepoName(repoRaw);
+    const { ref, path } = splitRefAndPath(rest, refOverride);
+    return { owner, repo, ref, path };
+  }
+
+  if (host !== GITHUB_HOST) return null;
+  if (parts.length < 2) return null;
+
+  const [owner, repoRaw, ...rest] = parts;
+  const repo = normalizeRepoName(repoRaw);
+
+  if (rest[0] === "blob" || rest[0] === "tree") {
+    const { ref, path } = splitRefAndPath(rest.slice(1), refOverride);
+    return { owner, repo, ref, path };
+  }
+
+  return { owner, repo, ...(refOverride ? { ref: refOverride } : {}), path: MANIFEST_FILENAME };
+}
+
+async function fetchManifestFromGitHub(context: Context, target: GitHubManifestTarget): Promise<Manifest> {
+  const response = await context.octokit.rest.repos.getContent({
+    owner: target.owner,
+    repo: target.repo,
+    path: target.path,
+    ...(target.ref ? { ref: target.ref } : {}),
+  });
+  if ("content" in response.data) {
+    const content = Buffer.from(response.data.content, "base64").toString("utf8");
+    return decodeManifest(JSON.parse(content));
+  }
+  throw new Error("Not a file content response");
+}
+
 export async function fetchManifests(pluginLocations: PluginLocation[], manifestCache: Record<string, Manifest>, context: Context): Promise<Manifest[]> {
   const manifests: Manifest[] = [];
 
@@ -25,8 +120,19 @@ async function fetchManifest(plugin: PluginLocation, manifestCache: Record<strin
     }
 
     try {
+      const githubTarget = parseGitHubManifestUrl(plugin);
+      if (githubTarget) {
+        const manifest = await fetchManifestFromGitHub(context, githubTarget);
+        manifestCache[plugin] = manifest;
+        return manifest;
+      }
+    } catch (e) {
+      context.logger.warn(`Could not fetch manifest for ${plugin} via GitHub API: ${e}`);
+    }
+
+    try {
       const normalized = plugin.trim().replace(/\/+$/, "");
-      const manifestUrl = normalized.endsWith("/manifest.json") ? normalized : `${normalized}/manifest.json`;
+      const manifestUrl = normalized.endsWith(`/${MANIFEST_FILENAME}`) ? normalized : `${normalized}/${MANIFEST_FILENAME}`;
       const response = await fetch(manifestUrl);
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -50,19 +156,7 @@ async function fetchManifest(plugin: PluginLocation, manifestCache: Record<strin
   }
 
   try {
-    let content;
-    const response = await context.octokit.rest.repos.getContent({
-      owner,
-      repo,
-      path: "manifest.json",
-      ref,
-    });
-    if ("content" in response.data) {
-      content = Buffer.from(response.data.content, "base64").toString("utf8");
-    } else {
-      throw new Error("Not a file content response");
-    }
-    const manifest = decodeManifest(JSON.parse(content));
+    const manifest = await fetchManifestFromGitHub(context, { owner, repo, ref, path: MANIFEST_FILENAME });
     manifestCache[cacheKey] = manifest;
     return manifest;
   } catch (e) {

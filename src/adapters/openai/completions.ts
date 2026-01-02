@@ -6,6 +6,17 @@ import { toConfigPluginKey } from "../../helpers/plugin-alias";
 import { Manifest } from "../../types/github";
 import { Context } from "../../types/index";
 
+function normalizeBaseUrl(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  let normalized = value.trim();
+  if (!normalized) return undefined;
+  normalized = normalized.replace(/\/+$/g, "");
+  if (normalized.endsWith("/v1")) {
+    normalized = normalized.slice(0, -3);
+  }
+  return normalized;
+}
+
 function isAsyncIterable<T>(value: unknown): value is AsyncIterable<T> {
   return (
     typeof value === "object" &&
@@ -29,6 +40,68 @@ export interface Answer {
 
 export class Completions {
   constructor(private readonly _context: Context) {}
+
+  private _buildMessages(prompt: string, instruction: string, lastError?: string): ChatCompletionMessageParam[] {
+    const messages: ChatCompletionMessageParam[] = [
+      {
+        role: "system",
+        content: prompt,
+      },
+      {
+        role: "user",
+        content: instruction,
+      },
+    ];
+
+    if (lastError) {
+      messages.push({
+        role: "user",
+        content: `The previous response generated invalid YAML. Please fix the following error and try again: ${lastError}`,
+      });
+    }
+
+    return messages;
+  }
+
+  private _ensureCompletionResponse(response: unknown): ChatCompletion {
+    if (!response) throw this._context.logger.error("No response from API");
+    if (isAsyncIterable(response)) {
+      throw this._context.logger.error("Unexpected streaming response from LLM");
+    }
+    return response as ChatCompletion;
+  }
+
+  private _getCompletionText(completionResponse: ChatCompletion): string {
+    const rawCompletion = completionResponse.choices?.[0]?.message?.content;
+    if (!rawCompletion) throw this._context.logger.warn("No completion generated");
+    return stripCodeFences(String(rawCompletion));
+  }
+
+  private _toAnswer(completionResponse: ChatCompletion, completion: string, attempts: number): Answer {
+    const usage = completionResponse.usage;
+    return {
+      text: completion,
+      tokenCounts: {
+        inputTokens: usage?.prompt_tokens ?? 0,
+        outputTokens: usage?.completion_tokens ?? 0,
+        totalTokens: usage?.total_tokens ?? 0,
+      },
+      metadata: {
+        attempts,
+        ...completionResponse,
+      },
+    };
+  }
+
+  private _handleInvalidYaml(attempts: number, maxRetries: number, error: string, completion: string) {
+    this._context.logger.warn(`Invalid YAML on attempt ${attempts}/${maxRetries}: ${error}`, {
+      completion,
+    });
+
+    if (attempts >= maxRetries) {
+      throw this._context.logger.error(`Failed to generate valid YAML after ${maxRetries} attempts. Last error: ${error}`);
+    }
+  }
 
   promptBuilder(originalContent: string, manifests: Record<string, Manifest>, repoUrl: string): string {
     const catalog = Object.entries(manifests)
@@ -86,75 +159,37 @@ The output is validated; if invalid, it will be rejected and retried.`,
   async createCompletions(prompt: string, instruction: string, maxRetries = 3): Promise<Answer> {
     let attempts = 0;
     let lastError: string | undefined;
+    const baseUrl = normalizeBaseUrl(this._context.config.baseUrl);
+    const model = this._context.config.model;
 
     while (attempts < maxRetries) {
       attempts++;
 
-      const messages: ChatCompletionMessageParam[] = [
-        {
-          role: "system",
-          content: prompt,
-        },
-        {
-          role: "user",
-          content: instruction,
-        },
-      ];
-
-      if (lastError) {
-        messages.push({
-          role: "user",
-          content: `The previous response generated invalid YAML. Please fix the following error and try again: ${lastError}`,
-        });
-      }
+      const messages = this._buildMessages(prompt, instruction, lastError);
 
       const response = await callLlm(
         {
           messages,
           max_tokens: 4000,
           temperature: attempts > 1 ? 0.2 : 0,
+          ...(baseUrl ? { baseUrl } : {}),
+          ...(model ? { model } : {}),
         },
         this._context
       );
 
-      if (!response) throw this._context.logger.error("No response from API");
-      if (isAsyncIterable(response)) {
-        throw this._context.logger.error("Unexpected streaming response from LLM");
-      }
-
-      const completionResponse: ChatCompletion = response;
-      const rawCompletion = completionResponse.choices?.[0]?.message?.content;
-      if (!rawCompletion) throw this._context.logger.error("No completion generated");
-
-      const completion = stripCodeFences(String(rawCompletion));
+      const completionResponse = this._ensureCompletionResponse(response);
+      const completion = this._getCompletionText(completionResponse);
 
       // Validate the YAML output
       const validation = validateYamlContent(completion, this._context.logger);
       if (validation.isValid) {
-        const usage = completionResponse.usage;
-        return {
-          text: completion,
-          tokenCounts: {
-            inputTokens: usage?.prompt_tokens ?? 0,
-            outputTokens: usage?.completion_tokens ?? 0,
-            totalTokens: usage?.total_tokens ?? 0,
-          },
-          metadata: {
-            attempts,
-            ...completionResponse,
-          },
-        };
+        return this._toAnswer(completionResponse, completion, attempts);
       }
 
-      lastError = validation.error;
-      this._context.logger.error(`Invalid YAML on attempt ${attempts}/${maxRetries}: ${validation.error}`, {
-        completion,
-      });
-
-      // If we've exhausted our retries, throw an error
-      if (attempts >= maxRetries) {
-        throw this._context.logger.error(`Failed to generate valid YAML after ${maxRetries} attempts. Last error: ${validation.error}`);
-      }
+      const errorMessage = validation.error ?? "Unknown YAML validation error";
+      lastError = errorMessage;
+      this._handleInvalidYaml(attempts, maxRetries, errorMessage, completion);
     }
 
     // This should never be reached due to the throw above, but TypeScript needs it

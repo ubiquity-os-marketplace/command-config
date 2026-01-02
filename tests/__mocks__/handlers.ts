@@ -22,6 +22,22 @@ export const handlers = [
       },
     });
   }),
+  http.post("https://ai-ubq-fi.deno.dev/v1/chat/completions", () => {
+    return HttpResponse.json({
+      choices: [
+        {
+          message: {
+            content: "test: value",
+          },
+        },
+      ],
+      usage: {
+        prompt_tokens: 100,
+        completion_tokens: 50,
+        total_tokens: 150,
+      },
+    });
+  }),
   // get org repos
   http.get("https://api.github.com/orgs/:org/repos", ({ params: { org } }: { params: { org: string } }) =>
     HttpResponse.json(db.repo.findMany({ where: { owner: { login: { equals: org } } } }))

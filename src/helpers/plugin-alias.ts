@@ -63,6 +63,7 @@ function addAliasesFromManifestName(name: string, canonical: string, add: AddAli
   add(trimmed, canonical);
 }
 
+/** @public */
 export function buildPluginAliasIndex(manifestStore: Record<string, Manifest>): PluginAliasIndex {
   const aliases = new Map<string, Set<string>>();
 
@@ -106,7 +107,7 @@ function tryResolvePluginKey(
 
   if (URL_REGEX.test(base)) return { resolved: base };
 
-  const match = /^([0-9a-zA-Z-._]+)\/([0-9a-zA-Z-._]+)(?:@[^\s]+)?$/.exec(base);
+  const match = /^([0-9A-Za-z._-]+)\/([0-9A-Za-z._-]+)(?:@[^\s]+)?$/.exec(base);
   if (!match) return { resolved: base };
   const owner = match[1];
   const repo = match[2];
@@ -119,11 +120,12 @@ export type ExpandResult = Readonly<{
   ambiguous: ReadonlyArray<{ name: string; candidates: readonly string[] }>;
 }>;
 
+/** @public */
 export function expandPluginInstallShorthand(instruction: string, index: PluginAliasIndex): ExpandResult {
   const replacements: { from: string; to: string }[] = [];
   const ambiguous: { name: string; candidates: readonly string[] }[] = [];
 
-  const pattern = /\b(install|add|enable)\s+(?<name>[a-z0-9][a-z0-9-_]*)(?:@(?<ref>[a-z0-9][a-z0-9-._/]*))?\b/gi;
+  const pattern = /\b(install|add|enable)\s+(?<name>[a-z0-9][a-z0-9_-]*)(?:@(?<ref>[a-z0-9][a-z0-9._/-]*))?\b/gi;
 
   const expandedInstruction = instruction.replace(pattern, (match, verb: string, nameValue: string, refValue: string | undefined) => {
     const name = String(nameValue ?? "").trim();
