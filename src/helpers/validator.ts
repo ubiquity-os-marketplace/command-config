@@ -73,7 +73,10 @@ export function parsePluginIdentifier(value: string): string | PluginLocation {
 export function parsePluginLocations(yamlContent: string, logger: Context["logger"]): PluginLocation[] {
   const { yaml: parsedYaml, errors } = parseYaml(yamlContent, logger);
   if (errors) {
-    logger.warn("Failed to parse YAML content:" + errors.map((error) => error.message).join(", "));
+    logger.warn(
+      "Failed to parse YAML content:" +
+        errors.map((error) => (error && typeof error === "object" && "message" in error ? error.message : String(error))).join(", ")
+    );
     return [];
   }
 
