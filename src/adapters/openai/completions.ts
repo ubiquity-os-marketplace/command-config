@@ -182,7 +182,7 @@ The output is validated; if invalid, it will be rejected and retried.`,
       const completion = this._getCompletionText(completionResponse);
 
       // Validate the YAML output
-      const validation = validateYamlContent(completion, this._context.logger);
+      const validation = await (validateYamlContent(completion, this._context.logger) as Promise<{ isValid: boolean; error?: string }>);
       if (validation.isValid) {
         return this._toAnswer(completionResponse, completion, attempts);
       }

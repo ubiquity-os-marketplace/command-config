@@ -3,7 +3,6 @@ import { drop } from "@mswjs/data";
 import { CommentHandler } from "@ubiquity-os/plugin-sdk";
 import { customOctokit as Octokit } from "@ubiquity-os/plugin-sdk/octokit";
 import { Logs } from "@ubiquity-os/ubiquity-os-logger";
-import dotenv from "dotenv";
 import manifest from "../manifest.json";
 import { runPlugin } from "../src";
 import { Env } from "../src/types/index";
@@ -13,7 +12,6 @@ import { createComment, setupTests } from "./__mocks__/helpers";
 import { server } from "./__mocks__/node";
 import { STRINGS } from "./__mocks__/strings";
 
-dotenv.config();
 const octokit = new Octokit();
 
 beforeAll(() => {

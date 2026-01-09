@@ -1,12 +1,17 @@
-import { Value } from "@sinclair/typebox/value";
-import { YAMLError } from "yaml";
-import yaml from "js-yaml";
+import { ConfigurationHandler } from "@ubiquity-os/plugin-sdk/configuration";
 import { Context } from "../types/index";
-import { PluginConfiguration, configReadSchema, configSchemaValidator, pluginNameRegex, urlRegex, configSchema } from "../config/plugin-schema";
+
+const pluginNameRegex = new RegExp("^([0-9a-zA-Z-._]+)/([0-9a-zA-Z-._]+)(?::([0-9a-zA-Z-._]+))?(?:@([0-9a-zA-Z-._]+(?:/[0-9a-zA-Z-._]+)*))?$");
+const urlRegex = /^https?:\/\/\S+$/;
+
+type PluginConfiguration = { plugins?: Record<string, unknown> };
+
+function createConfigurationHandler(logger: Context["logger"]) {
+  return new ConfigurationHandler(logger as never, {} as never, null);
+}
 
 export function parseConfig(yamlContent: string, logger: Context["logger"]): PluginLocation[] {
   try {
-    Value.Cast(configReadSchema, yaml.load(yamlContent)); // Validate schema
     return parsePluginLocations(yamlContent, logger);
   } catch (error) {
     logger.warn("Failed to parse YAML content", { stack: error instanceof Error ? error.stack : String(error) });
@@ -14,26 +19,27 @@ export function parseConfig(yamlContent: string, logger: Context["logger"]): Plu
   }
 }
 
-export function validateYamlContent(content: string, logger: Context["logger"]): { isValid: boolean; error?: string } {
+export async function validateYamlContent(content: string, logger: Context["logger"]): Promise<{ isValid: boolean; error?: string }> {
   try {
-    const { yaml, errors } = parseYaml(content, logger);
-    if (errors) {
-      return { isValid: false, error: errors.map((error) => error.message).join(", ") };
+    const handler = createConfigurationHandler(logger);
+    (handler as unknown as { _download: () => Promise<string> })._download = async () => content;
+
+    const result = await handler.getConfigurationFromRepo("local", "local");
+
+    if (!result || !result.config) {
+      return { isValid: false, error: "Invalid or empty YAML content" };
     }
-    const targetRepoConfiguration: PluginConfiguration | null = yaml as PluginConfiguration;
-    if (targetRepoConfiguration) {
-      const configSchemaWithDefaults = Value.Default(configSchema, targetRepoConfiguration) as Readonly<unknown>;
-      const errors = configSchemaValidator.testReturningErrors(configSchemaWithDefaults);
-      if (errors) {
-        return {
-          isValid: false,
-          error: Array.from(errors)
-            .map((error) => error.message)
-            .join(", "),
-        };
-      }
+
+    if (!result.errors) {
+      return { isValid: true };
     }
-    return { isValid: true };
+
+    const errorsArray = Array.isArray(result.errors) ? result.errors : Array.from(result.errors as Iterable<unknown>);
+    const errorMessage = errorsArray
+      .map((error) => (error && typeof error === "object" && "message" in error ? String((error as { message: unknown }).message) : String(error)))
+      .join(", ");
+
+    return { isValid: false, error: errorMessage || "Invalid YAML content" };
   } catch (error) {
     return {
       isValid: false,
@@ -43,17 +49,8 @@ export function validateYamlContent(content: string, logger: Context["logger"]):
 }
 
 export function parseYaml(data: null | string, logger: Context["logger"]) {
-  if (!data) {
-    return { yaml: null, errors: null };
-  }
-
-  try {
-    const parsedData = yaml.load(data);
-    return { yaml: parsedData ?? null, errors: null };
-  } catch (error) {
-    logger.warn("Error parsing YAML", { stack: error instanceof Error ? error.stack : String(error) });
-    return { errors: [error] as YAMLError[], yaml: null };
-  }
+  const handler = createConfigurationHandler(logger);
+  return (handler as unknown as { _parseYaml: (data: null | string) => { yaml: unknown | null; errors: unknown[] | null } })._parseYaml(data);
 }
 
 export type PluginLocation = string | { owner: string; repo: string; ref?: string };
