@@ -25,16 +25,16 @@
 
 ```yml
 plugins:
-    http://localhost:4000:
-      with:
-        parserPath: "https://github.com/ubiquity-os/ubiquity-os-kernel.git"
-        configPath: ".github/.ubiquity-os.config.yml"
-        devConfigPath: ".github/.ubiquity-os.config.dev.yml"
-        autoMerge: false
-        defaultTargets:
-          - name: "https://github.com/ubiquity-os/.ubiquity-os.git"
-            branch: "main"
-            type: "dev"
+  http://localhost:4000:
+    with:
+      parserPath: "https://github.com/ubiquity-os/ubiquity-os-kernel.git"
+      configPath: ".github/.ubiquity-os.config.yml"
+      devConfigPath: ".github/.ubiquity-os.config.dev.yml"
+      autoMerge: false
+      defaultTargets:
+        - name: "https://github.com/ubiquity-os/.ubiquity-os.git"
+          branch: "main"
+          type: "dev"
 ```
 
 ###### At this stage, your plugin will fire on your defined events with the required settings passed in from the kernel. You can now start writing your plugin's logic.
