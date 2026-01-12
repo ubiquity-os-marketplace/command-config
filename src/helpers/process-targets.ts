@@ -1,10 +1,8 @@
+import { ConfigurationHandler } from "@ubiquity-os/plugin-sdk/configuration";
 import { Manifest } from "../types/github";
 import { Context } from "../types/index";
 import { Target } from "../types/target";
 import { applyChanges } from "./apply-changes";
-import { fetchManifests } from "./fetch-manifests";
-import { getFileContent } from "./get-file-content";
-import { parseConfig } from "./validator";
 
 async function maybeFormatYaml(content: string, context: Context): Promise<string> {
   if (process.env.JEST_WORKER_ID) return content;
@@ -38,6 +36,11 @@ export async function processTargetRepos(
 ): Promise<string | undefined> {
   const { currentFileContents } = await fetchAndParseFileContent(context, target, manifestStore);
 
+  if (!currentFileContents) {
+    context.logger.warn("No content was found for the manifest.");
+    return undefined;
+  }
+
   // Build Prompt
   const { adapters } = context;
   const prompt = adapters.llm.completions.promptBuilder(currentFileContents, manifestStore ?? {}, target.url);
@@ -62,14 +65,15 @@ export async function processTargetRepos(
 }
 
 export async function fetchAndParseFileContent(context: Context, target: Target, manifestStore?: Record<string, Manifest>) {
-  const currentFileContents = await getFileContent(context, target.owner, target.repo, target.filePath);
-  if (!currentFileContents) throw context.logger.warn("File content not found. for target: " + JSON.stringify(target));
-
-  // Parse Config
-  const parsedUrls = parseConfig(currentFileContents, context.logger);
-  // Manifest Cache (to avoid fetching the same manifest multiple times)
-  const manifestCache: Record<string, Manifest> = manifestStore || {};
-  // Fetch Manifest
-  const manifests = await fetchManifests(parsedUrls, manifestCache, context);
-  return { currentFileContents, manifests };
+  const cfgHandler = new ConfigurationHandler(context.logger, context.octokit);
+  const config = await cfgHandler.getConfigurationFromRepo(target.owner, target.repo);
+  if (manifestStore && config.config?.plugins) {
+    for (const key of Object.keys(config.config.plugins)) {
+      const manifest = config.config.plugins[key];
+      if (manifest) {
+        manifestStore[key] = { ...manifest, name: key };
+      }
+    }
+  }
+  return { currentFileContents: config.rawData, manifests: config.config?.plugins };
 }
