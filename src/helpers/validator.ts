@@ -1,9 +1,9 @@
 import { ConfigurationHandler } from "@ubiquity-os/plugin-sdk/configuration";
 import { Context } from "../types/index";
 
-export async function validateYamlContent(content: string, logger: Context["logger"]): Promise<{ isValid: boolean; error?: string }> {
+export async function validateYamlContent(content: string, context: Context): Promise<{ isValid: boolean; error?: string }> {
   try {
-    const handler = new ConfigurationHandler(logger, {} as never);
+    const handler = new ConfigurationHandler(context.logger, context.octokit);
 
     const result = handler.parseYaml(content);
 

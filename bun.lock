@@ -22,7 +22,6 @@
         "@mswjs/data": "0.16.2",
         "@swc/jest": "^0.2.39",
         "@types/jest": "^30.0.0",
-        "@types/node": "25.0.3",
         "cspell": "8.17.3",
         "dotenv": "^17.2.3",
         "eslint": "9.19.0",
