@@ -17,7 +17,7 @@
     "format:lint": "eslint --fix .",
     "format:prettier": "prettier --write .",
     "check-formatting:prettier": "prettier --check .",
-    "format:cspell": "cspell **/*",
+    "format:cspell": "cspell .",
     "knip": "knip --config .github/knip.ts",
     "knip-ci": "knip --no-exit-code --reporter json --config .github/knip.ts",
     "jest:test": "jest --coverage",

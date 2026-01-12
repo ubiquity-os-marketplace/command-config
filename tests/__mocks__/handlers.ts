@@ -275,8 +275,13 @@ export const handlers = [
   }),
 ];
 
-function normalizePathParam(param: string | string[] | undefined) {
-  const raw = Array.isArray(param) ? param.join("/") : param ?? "";
+function normalizePathParam(param: string | readonly string[] | undefined): string {
+  let raw = "";
+  if (typeof param === "string") {
+    raw = param;
+  } else if (Array.isArray(param)) {
+    raw = param.join("/");
+  }
   try {
     return decodeURIComponent(raw);
   } catch {
