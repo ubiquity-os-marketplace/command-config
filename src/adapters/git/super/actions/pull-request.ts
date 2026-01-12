@@ -8,6 +8,17 @@ export class PullRequest extends GitSuper {
     super(context);
   }
 
+  async merge(params: { owner: string; repo: string; pullNumber: number; mergeMethod?: "merge" | "squash" | "rebase" }) {
+    const { owner, repo, pullNumber, mergeMethod } = params;
+    const { data } = await this._context.octokit.rest.pulls.merge({
+      owner,
+      repo,
+      pull_number: pullNumber,
+      merge_method: mergeMethod ?? "merge",
+    });
+    return data;
+  }
+
   async create(target: Target, fileContent: string, commitMessage: string = "Update file content", editorInstruction: string) {
     const { owner, repo, filePath } = target;
 
@@ -80,6 +91,7 @@ export class PullRequest extends GitSuper {
 
       return {
         pullRequestUrl: pr.html_url,
+        pullRequestNumber: pr.number,
         branch: branchName,
       };
     } catch (error) {

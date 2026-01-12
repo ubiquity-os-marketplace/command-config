@@ -11,6 +11,7 @@ export const db = factory({
     repo: String,
     number: Number,
     html_url: String,
+    merged: Boolean,
   },
   git_refs: {
     id: primaryKey(Number),

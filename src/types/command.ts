@@ -4,7 +4,8 @@ import { StaticDecode } from "@sinclair/typebox";
 export const commandSchema = T.Object({
   name: T.Literal("config"),
   parameters: T.Object({
-    editorInstruction: T.String(),
+    editor_instruction: T.Optional(T.String()),
+    editorInstruction: T.Optional(T.String()),
   }),
 });
 

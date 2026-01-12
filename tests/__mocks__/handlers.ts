@@ -1,3 +1,4 @@
+import { Buffer } from "node:buffer";
 import { http, HttpResponse } from "msw";
 import { db } from "./db";
 import issueTemplate from "./issue-template";
@@ -5,8 +6,63 @@ import issueTemplate from "./issue-template";
  * Intercepts the routes and returns a custom payload
  */
 export const handlers = [
-  // Handle OpenRouter API request
-  http.post("https://openrouter.ai/api/v1/chat/completions", () => {
+  // GitHub GraphQL (Octokit plugins and some SDK helpers may use this)
+  http.post("https://api.github.com/graphql", async ({ request }) => {
+    const body = (await request.json().catch(() => null)) as {
+      query?: string;
+      operationName?: string;
+      variables?: Record<string, unknown>;
+    } | null;
+
+    const query = body?.query ?? "";
+
+    if (/mergePullRequest|enablePullRequestAutoMerge/i.test(query)) {
+      const pull = db.pulls.getAll()[0];
+      if (pull) {
+        db.pulls.update({ where: { id: { equals: pull.id } }, data: { merged: true } });
+      }
+
+      return HttpResponse.json({
+        data: {
+          mergePullRequest: pull ? { pullRequest: { number: pull.number, merged: true } } : null,
+          enablePullRequestAutoMerge: pull ? { pullRequest: { number: pull.number } } : null,
+        },
+      });
+    }
+
+    if (/rateLimit/i.test(query)) {
+      return HttpResponse.json({
+        data: {
+          rateLimit: {
+            remaining: 5000,
+            used: 0,
+            resetAt: new Date(Date.now() + 60_000).toISOString(),
+          },
+        },
+      });
+    }
+
+    return HttpResponse.json({ data: {} });
+  }),
+
+  // Handle LLM request
+  http.post("https://ai.ubq.fi/v1/chat/completions", () => {
+    return HttpResponse.json({
+      choices: [
+        {
+          message: {
+            content: "test: value",
+          },
+        },
+      ],
+      usage: {
+        prompt_tokens: 100,
+        completion_tokens: 50,
+        total_tokens: 150,
+      },
+    });
+  }),
+  http.post("https://ai-ubq-fi.deno.dev/v1/chat/completions", () => {
     return HttpResponse.json({
       choices: [
         {
@@ -114,12 +170,13 @@ export const handlers = [
     return HttpResponse.json(newItem);
   }),
   // Get git ref
-  http.get("https://api.github.com/repos/:owner/:repo/git/ref/:ref", ({ params }) => {
+  http.get("https://api.github.com/repos/:owner/:repo/git/ref/:ref*", ({ params }) => {
+    const refParam = normalizePathParam(params.ref);
     const ref = db.git_refs.findFirst({
       where: {
         owner: { equals: params.owner as string },
         repo: { equals: params.repo as string },
-        ref: { equals: (params.ref as string).replace("heads/", "") },
+        ref: { equals: refParam.replace("heads/", "") },
       },
     });
     return HttpResponse.json({ object: { sha: ref?.sha } });
@@ -137,34 +194,42 @@ export const handlers = [
     return HttpResponse.json(newRef);
   }),
   // Get file content
-  http.get("https://api.github.com/repos/:owner/:repo/contents/:path", ({ params }) => {
+  http.get("https://api.github.com/repos/:owner/:repo/contents/:path*", ({ params, request }) => {
+    const path = normalizePathParam(params.path);
     const file = db.git_files.findFirst({
       where: {
         owner: { equals: params.owner as string },
         repo: { equals: params.repo as string },
-        path: { equals: params.path as string },
+        path: { equals: path },
       },
     });
     if (!file) {
       return new HttpResponse(null, { status: 404 });
     }
 
+    const accept = request.headers.get("accept") ?? "";
+    if (accept.includes("application/vnd.github.v3.raw") || accept.includes("application/vnd.github.raw")) {
+      const decoded = Buffer.from(file.content, "base64").toString("utf-8");
+      return new HttpResponse(decoded);
+    }
+
     return HttpResponse.json({
       sha: file.sha,
       content: file.content,
       size: file.content.length,
-      path: params.path,
+      path,
       type: "file",
     });
   }),
   // Create or update file
-  http.put("https://api.github.com/repos/:owner/:repo/contents/:path", async ({ params, request }) => {
+  http.put("https://api.github.com/repos/:owner/:repo/contents/:path*", async ({ params, request }) => {
     const { content, sha } = await getValue(request.body);
+    const path = normalizePathParam(params.path);
     const newFile = db.git_files.create({
       id: Date.now(),
       owner: params.owner as string,
       repo: params.repo as string,
-      path: params.path as string,
+      path,
       sha: sha || `${Date.now()}`,
       content,
     });
@@ -181,10 +246,48 @@ export const handlers = [
       repo: params.repo as string,
       number: prNumber,
       html_url: `https://github.com/${params.owner}/${params.repo}/pull/${prNumber}`,
+      merged: false,
     });
     return HttpResponse.json(newPull);
   }),
+  // Merge pull request
+  http.put("https://api.github.com/repos/:owner/:repo/pulls/:pull_number/merge", ({ params }) => {
+    const pullNumber = Number(params.pull_number);
+    const existing = db.pulls.findFirst({
+      where: {
+        owner: { equals: params.owner as string },
+        repo: { equals: params.repo as string },
+        number: { equals: pullNumber },
+      },
+    });
+    if (!existing) {
+      return new HttpResponse(null, { status: 404 });
+    }
+    db.pulls.update({
+      where: { id: { equals: existing.id } },
+      data: { merged: true },
+    });
+    return HttpResponse.json({
+      merged: true,
+      message: "Pull Request successfully merged",
+      sha: "merged-sha",
+    });
+  }),
 ];
+
+function normalizePathParam(param: string | readonly string[] | undefined): string {
+  let raw = "";
+  if (typeof param === "string") {
+    raw = param;
+  } else if (Array.isArray(param)) {
+    raw = param.join("/");
+  }
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return raw;
+  }
+}
 
 async function getValue(body: ReadableStream<Uint8Array> | null) {
   if (body) {
