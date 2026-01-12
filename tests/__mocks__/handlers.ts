@@ -5,6 +5,45 @@ import issueTemplate from "./issue-template";
  * Intercepts the routes and returns a custom payload
  */
 export const handlers = [
+  // GitHub GraphQL (Octokit plugins and some SDK helpers may use this)
+  http.post("https://api.github.com/graphql", async ({ request }) => {
+    const body = (await request.json().catch(() => null)) as {
+      query?: string;
+      operationName?: string;
+      variables?: Record<string, unknown>;
+    } | null;
+
+    const query = body?.query ?? "";
+
+    if (/mergePullRequest|enablePullRequestAutoMerge/i.test(query)) {
+      const pull = db.pulls.getAll()[0];
+      if (pull) {
+        db.pulls.update({ where: { id: { equals: pull.id } }, data: { merged: true } });
+      }
+
+      return HttpResponse.json({
+        data: {
+          mergePullRequest: pull ? { pullRequest: { number: pull.number, merged: true } } : null,
+          enablePullRequestAutoMerge: pull ? { pullRequest: { number: pull.number } } : null,
+        },
+      });
+    }
+
+    if (/rateLimit/i.test(query)) {
+      return HttpResponse.json({
+        data: {
+          rateLimit: {
+            remaining: 5000,
+            used: 0,
+            resetAt: new Date(Date.now() + 60_000).toISOString(),
+          },
+        },
+      });
+    }
+
+    return HttpResponse.json({ data: {} });
+  }),
+
   // Handle LLM request
   http.post("https://ai.ubq.fi/v1/chat/completions", () => {
     return HttpResponse.json({
@@ -130,7 +169,7 @@ export const handlers = [
     return HttpResponse.json(newItem);
   }),
   // Get git ref
-  http.get("https://api.github.com/repos/:owner/:repo/git/ref/:ref", ({ params }) => {
+  http.get("https://api.github.com/repos/:owner/:repo/git/ref/:ref*", ({ params }) => {
     const ref = db.git_refs.findFirst({
       where: {
         owner: { equals: params.owner as string },
@@ -153,7 +192,7 @@ export const handlers = [
     return HttpResponse.json(newRef);
   }),
   // Get file content
-  http.get("https://api.github.com/repos/:owner/:repo/contents/:path", ({ params }) => {
+  http.get("https://api.github.com/repos/:owner/:repo/contents/:path*", ({ params }) => {
     const file = db.git_files.findFirst({
       where: {
         owner: { equals: params.owner as string },
@@ -174,7 +213,7 @@ export const handlers = [
     });
   }),
   // Create or update file
-  http.put("https://api.github.com/repos/:owner/:repo/contents/:path", async ({ params, request }) => {
+  http.put("https://api.github.com/repos/:owner/:repo/contents/:path*", async ({ params, request }) => {
     const { content, sha } = await getValue(request.body);
     const newFile = db.git_files.create({
       id: Date.now(),
