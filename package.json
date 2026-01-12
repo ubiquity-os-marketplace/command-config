@@ -33,7 +33,6 @@
     "open-source"
   ],
   "dependencies": {
-    "@octokit/webhooks-methods": "^6.0.0",
     "@sinclair/typebox": "0.33.22",
     "@ubiquity-os/plugin-sdk": "^3.9.0",
     "@ubiquity-os/ubiquity-os-logger": "^1.4.0",
