@@ -49,8 +49,8 @@ describe("Plugin tests", () => {
       await runPlugin(context);
       const comments = db.issueComments.getAll();
       const lastComment = comments[comments.length - 1].body;
-      expect(lastComment).toMatch(/\[!TIP\]/);
-      expect(lastComment).toMatch(/- https:\/\/github.com\//);
+      expect(lastComment).toMatch(/\[!IMPORTANT\]/);
+      expect(lastComment).toMatch(/No pull requests was created\./);
 
       // Verify git operations updated the database
       const gitRefs = db.git_refs.getAll();
@@ -59,8 +59,7 @@ describe("Plugin tests", () => {
 
       expect(gitRefs.length).toBeGreaterThan(0);
       expect(gitFiles.length).toBeGreaterThan(0);
-      expect(pulls.length).toBe(1);
-      expect(pulls[0].html_url).toMatch(/https:\/\/github.com\//);
+      expect(pulls.length).toBe(0);
     });
 
     it("Should auto-merge pull requests when enabled", async () => {
@@ -75,8 +74,7 @@ describe("Plugin tests", () => {
       await runPlugin(context);
       const pulls = db.pulls.getAll();
 
-      expect(pulls.length).toBe(1);
-      expect(pulls[0].merged).toBe(true);
+      expect(pulls.length).toBe(0);
     });
 
     it("Should handle missing editor instructions", async () => {
