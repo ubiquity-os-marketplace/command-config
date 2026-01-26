@@ -371,6 +371,10 @@
         ],
         "type": "string"
       },
+      "reasoningEffort": {
+        "type": "string",
+        "examples": ["none", "minimal", "low", "medium", "high", "xhigh"]
+      },
       "defaultTargets": {
         "default": [
           {

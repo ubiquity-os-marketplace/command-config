@@ -161,6 +161,7 @@ The output is validated; if invalid, it will be rejected and retried.`,
     let lastError: string | undefined;
     const baseUrl = normalizeBaseUrl(this._context.config.baseUrl);
     const model = this._context.config.model;
+    const reasoningEffort = this._context.config.reasoningEffort;
 
     while (attempts < maxRetries) {
       attempts++;
@@ -174,7 +175,8 @@ The output is validated; if invalid, it will be rejected and retried.`,
           temperature: attempts > 1 ? 0.2 : 0,
           ...(baseUrl ? { baseUrl } : {}),
           ...(model ? { model } : {}),
-        },
+          ...(reasoningEffort !== undefined ? { reasoning_effort: reasoningEffort } : {}),
+        } as Parameters<typeof callLlm>[0],
         this._context
       );
 

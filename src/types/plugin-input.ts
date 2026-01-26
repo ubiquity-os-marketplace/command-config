@@ -348,6 +348,9 @@ export const pluginSettingsSchema = T.Object(
         // cspell:enable
       ],
     }),
+    reasoningEffort: T.Optional(
+      T.Union([T.Literal("none"), T.Literal("minimal"), T.Literal("low"), T.Literal("medium"), T.Literal("high"), T.Literal("xhigh")])
+    ),
     defaultTargets: T.Array(
       T.Object({
         name: T.String({ default: "https://github.com/ubiquity-os/.ubiquity-os.git" }),
