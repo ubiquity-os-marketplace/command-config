@@ -4,9 +4,6 @@ import { Target } from "../types/target";
 import { getFileContent } from "./get-file-content";
 import { checkOrgPermissions, checkUserRepoPermissions } from "./user-permission";
 
-const LOCAL_CONFIG_FULL_PATH = ".github/.ubiquity-os.config.local.yml";
-const VALID_CONFIG_SUFFIX = /^[a-z0-9][a-z0-9_-]*$/i;
-
 function readString(value: unknown): string {
   return typeof value === "string" ? value : "";
 }
@@ -20,21 +17,10 @@ function getConfigPathCandidatesFromSettings(context: Context): string[] {
 }
 
 function getFallbackConfigPathCandidates(context: Context): string[] {
-  const environment = readString((context.config as Record<string, unknown>).environment)
-    .trim()
-    .toLowerCase();
-  const configPath = context.config.configPath;
-  const devConfigPath = context.config.devConfigPath;
-
-  if (!environment) return [devConfigPath, configPath];
-  if (environment === "production" || environment === "prod") return [configPath];
-
-  const suffix = environment === "development" ? "dev" : environment;
-  if (suffix === "dev") return [devConfigPath, configPath];
-  if (!VALID_CONFIG_SUFFIX.test(suffix)) return [devConfigPath, configPath];
-
-  const derived = suffix === "local" ? LOCAL_CONFIG_FULL_PATH : `.github/.ubiquity-os.config.${suffix}.yml`;
-  return derived === configPath ? [configPath] : [derived, configPath];
+  const configPath = readString(context.config.configPath).trim();
+  const devConfigPath = readString(context.config.devConfigPath).trim();
+  const candidates = [configPath, devConfigPath].filter((value) => value.length > 0);
+  return Array.from(new Set(candidates));
 }
 
 function getConfigPathCandidates(context: Context): string[] {
@@ -44,7 +30,6 @@ function getConfigPathCandidates(context: Context): string[] {
 }
 
 function getTargetTypeForConfigPath(context: Context, filePath: string): string {
-  if (filePath === LOCAL_CONFIG_FULL_PATH) return "local";
   if (filePath === context.config.devConfigPath) return "dev";
   if (filePath === context.config.configPath) return "config";
   return "config";
