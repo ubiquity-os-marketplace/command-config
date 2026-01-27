@@ -34,15 +34,6 @@
         "default": ".github/.ubiquity-os.config.dev.yml",
         "type": "string"
       },
-      "environment": {
-        "type": "string"
-      },
-      "configPathCandidates": {
-        "type": "array",
-        "items": {
-          "type": "string"
-        }
-      },
       "autoMerge": {
         "default": false,
         "type": "boolean"
@@ -381,32 +372,8 @@
         "type": "string"
       },
       "reasoningEffort": {
-        "anyOf": [
-          {
-            "const": "none",
-            "type": "string"
-          },
-          {
-            "const": "minimal",
-            "type": "string"
-          },
-          {
-            "const": "low",
-            "type": "string"
-          },
-          {
-            "const": "medium",
-            "type": "string"
-          },
-          {
-            "const": "high",
-            "type": "string"
-          },
-          {
-            "const": "xhigh",
-            "type": "string"
-          }
-        ]
+        "type": "string",
+        "examples": ["none", "minimal", "low", "medium", "high", "xhigh"]
       },
       "defaultTargets": {
         "default": [
@@ -445,6 +412,6 @@
       }
     }
   },
-  "homepage_url": "https://command-config-development.deno.dev",
-  "short_name": "ubiquity-os-marketplace/command-config@fix/preserve-imports"
+  "homepage_url": "https://command-config-fix-preserv.deno.dev",
+  "short_name": "ubiquity-os-marketplace/command-config@development"
 }
