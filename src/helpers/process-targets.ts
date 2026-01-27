@@ -94,10 +94,11 @@ function injectBlockAtTop(content: string, block: string): string {
 }
 
 function shouldPreserveImports(editorInstruction: string): boolean {
-  const normalized = editorInstruction.trim().toLowerCase();
-  if (!normalized.includes("import")) return true;
+  const normalized = editorInstruction.trim().toLowerCase().replace(/[’‘]/g, "'");
+  const hasImportMention = /\bimports?\b/.test(normalized);
+  if (!hasImportMention) return true;
 
-  const preservePatterns = [/\bkeep\s+imports?\b/, /\bpreserve\s+imports?\b/, /\bretain\s+imports?\b/];
+  const preservePatterns = [/\b(keep|preserve|retain|leave)\s+imports?\b/, /\b(do\s+not|don't|dont|no)\s+(remove|change|modify|edit|drop|delete)\s+imports?\b/];
   return preservePatterns.some((pattern) => pattern.test(normalized));
 }
 
