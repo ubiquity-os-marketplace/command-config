@@ -6,17 +6,6 @@ import { toConfigPluginKey } from "../../helpers/plugin-alias";
 import { Manifest } from "../../types/github";
 import { Context } from "../../types/index";
 
-function normalizeBaseUrl(value: string | undefined): string | undefined {
-  if (!value) return undefined;
-  let normalized = value.trim();
-  if (!normalized) return undefined;
-  normalized = normalized.replace(/\/+$/g, "");
-  if (normalized.endsWith("/v1")) {
-    normalized = normalized.slice(0, -3);
-  }
-  return normalized;
-}
-
 function isAsyncIterable<T>(value: unknown): value is AsyncIterable<T> {
   return (
     typeof value === "object" &&
@@ -160,8 +149,6 @@ The output is validated; if invalid, it will be rejected and retried.`,
   async createCompletions(prompt: string, instruction: string, maxRetries = 3): Promise<Answer> {
     let attempts = 0;
     let lastError: string | undefined;
-    const baseUrl = normalizeBaseUrl(this._context.config.baseUrl);
-    const model = this._context.config.model;
     const reasoningEffort = this._context.config.reasoningEffort;
 
     while (attempts < maxRetries) {
@@ -174,8 +161,6 @@ The output is validated; if invalid, it will be rejected and retried.`,
           messages,
           max_tokens: 4000,
           temperature: attempts > 1 ? 0.2 : 0,
-          ...(baseUrl ? { baseUrl } : {}),
-          ...(model ? { model } : {}),
           ...(reasoningEffort !== undefined ? { reasoning_effort: reasoningEffort } : {}),
         } as Parameters<typeof callLlm>[0],
         this._context
