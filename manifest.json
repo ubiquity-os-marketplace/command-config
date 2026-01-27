@@ -381,32 +381,8 @@
         "type": "string"
       },
       "reasoningEffort": {
-        "anyOf": [
-          {
-            "const": "none",
-            "type": "string"
-          },
-          {
-            "const": "minimal",
-            "type": "string"
-          },
-          {
-            "const": "low",
-            "type": "string"
-          },
-          {
-            "const": "medium",
-            "type": "string"
-          },
-          {
-            "const": "high",
-            "type": "string"
-          },
-          {
-            "const": "xhigh",
-            "type": "string"
-          }
-        ]
+        "type": "string",
+        "examples": ["none", "minimal", "low", "medium", "high", "xhigh"]
       },
       "defaultTargets": {
         "default": [
@@ -446,5 +422,5 @@
     }
   },
   "homepage_url": "https://command-config-fix-preserv.deno.dev",
-  "short_name": "ubiquity-os-marketplace/command-config@fix/preserve-imports"
+  "short_name": "ubiquity-os-marketplace/command-config@development"
 }
