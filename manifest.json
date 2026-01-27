@@ -34,6 +34,15 @@
         "default": ".github/.ubiquity-os.config.dev.yml",
         "type": "string"
       },
+      "environment": {
+        "type": "string"
+      },
+      "configPathCandidates": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
       "autoMerge": {
         "default": false,
         "type": "boolean"

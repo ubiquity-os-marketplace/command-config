@@ -93,9 +93,18 @@ function injectBlockAtTop(content: string, block: string): string {
   return [...combined, ...suffix].join("\n");
 }
 
-function preserveImportsBlock(original: string, updated: string): string {
+function shouldPreserveImports(editorInstruction: string): boolean {
+  const normalized = editorInstruction.trim().toLowerCase();
+  if (!normalized.includes("import")) return true;
+
+  const preservePatterns = [/\bkeep\s+imports?\b/, /\bpreserve\s+imports?\b/, /\bretain\s+imports?\b/];
+  return preservePatterns.some((pattern) => pattern.test(normalized));
+}
+
+function preserveImportsBlock(original: string, updated: string, editorInstruction: string): string {
   if (!hasTopLevelKey(original, "imports")) return updated;
   if (hasTopLevelKey(updated, "imports")) return updated;
+  if (!shouldPreserveImports(editorInstruction)) return updated;
   const block = extractTopLevelBlock(original, "imports");
   if (!block) return updated;
   return injectBlockAtTop(updated, block);
@@ -124,7 +133,7 @@ export async function processTargetRepos(
   context.logger.info("LLM response received.", { attempts: llmResponse.metadata.attempts, outputChars: llmResponse.text.length });
 
   const updatedFileContents = extractYamlOnly(llmResponse.text);
-  const mergedFileContents = preserveImportsBlock(currentFileContents, updatedFileContents);
+  const mergedFileContents = preserveImportsBlock(currentFileContents, updatedFileContents, editorInstruction);
   const formattedFileContents = await maybeFormatYaml(mergedFileContents, context);
 
   if (formattedFileContents.trim() === currentFileContents.trim()) {
