@@ -98,7 +98,7 @@ function shouldPreserveImports(editorInstruction: string): boolean {
   const hasImportMention = /\bimports?\b/.test(normalized);
   if (!hasImportMention) return true;
 
-  const preservePatterns = [/\b(keep|preserve|retain|leave)\s+imports?\b/, /\b(do\s+not|don't|dont|no)\s+(remove|change|modify|edit|drop|delete)\s+imports?\b/];
+  const preservePatterns = [/\b(keep|preserve|retain|leave)\s+imports?\b/, /\b(do\s+not|don'?t|no)\s+(remove|change|modify|edit|drop|delete)\s+imports?\b/];
   return preservePatterns.some((pattern) => pattern.test(normalized));
 }
 
