@@ -34,7 +34,7 @@
   ],
   "dependencies": {
     "@sinclair/typebox": "0.34.47",
-    "@ubiquity-os/plugin-sdk": "github:ubiquity-os/plugin-sdk#1172134adeade41cc3f91a61c57f5a5a3355ccc6",
+    "@ubiquity-os/plugin-sdk": "3.11.0",
     "@ubiquity-os/ubiquity-os-logger": "^1.4.0",
     "openai": "^4.86.2",
     "prettier": "3.4.2"
