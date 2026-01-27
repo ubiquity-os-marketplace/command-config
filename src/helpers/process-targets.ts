@@ -3,6 +3,7 @@ import { Manifest } from "../types/github";
 import { Context } from "../types/index";
 import { Target } from "../types/target";
 import { applyChanges } from "./apply-changes";
+import { getFileContent } from "./get-file-content";
 
 async function maybeFormatYaml(content: string, context: Context): Promise<string> {
   if (process.env.JEST_WORKER_ID) return content;
@@ -28,6 +29,78 @@ function extractYamlOnly(text: string): string {
   return text.trim();
 }
 
+function readString(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
+function hasTopLevelKey(content: string, key: string): boolean {
+  const pattern = new RegExp(`^${key}\\s*:`, "m");
+  return pattern.test(content);
+}
+
+function extractTopLevelBlock(content: string, key: string): string | null {
+  const lines = content.split(/\r?\n/);
+  const keyPattern = new RegExp(`^${key}\\s*:`); // top-level only (no indentation)
+  let startIndex = -1;
+
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i];
+    if (line.startsWith(" ") || line.startsWith("\t")) continue;
+    if (keyPattern.test(line)) {
+      startIndex = i;
+      break;
+    }
+  }
+
+  if (startIndex === -1) return null;
+
+  let endIndex = lines.length;
+  for (let i = startIndex + 1; i < lines.length; i += 1) {
+    const line = lines[i];
+    if (line.trim().length === 0) continue;
+    if (!line.startsWith(" ") && !line.startsWith("\t") && /^[a-zA-Z0-9_-]+\s*:/.test(line)) {
+      endIndex = i;
+      break;
+    }
+  }
+
+  return lines.slice(startIndex, endIndex).join("\n").trimEnd();
+}
+
+function injectBlockAtTop(content: string, block: string): string {
+  const lines = content.split(/\r?\n/);
+  let insertIndex = 0;
+
+  while (insertIndex < lines.length) {
+    const line = lines[insertIndex];
+    const trimmed = line.trim();
+    if (trimmed === "" || trimmed.startsWith("#") || trimmed === "---") {
+      insertIndex += 1;
+      continue;
+    }
+    break;
+  }
+
+  const prefix = lines.slice(0, insertIndex);
+  const suffix = lines.slice(insertIndex);
+  const blockLines = block.split(/\r?\n/);
+  const combined = [...prefix, ...blockLines];
+  if (suffix.length) {
+    if (combined.length && combined[combined.length - 1].trim() !== "") {
+      combined.push("");
+    }
+  }
+  return [...combined, ...suffix].join("\n");
+}
+
+function preserveImportsBlock(original: string, updated: string): string {
+  if (!hasTopLevelKey(original, "imports")) return updated;
+  if (hasTopLevelKey(updated, "imports")) return updated;
+  const block = extractTopLevelBlock(original, "imports");
+  if (!block) return updated;
+  return injectBlockAtTop(updated, block);
+}
+
 export async function processTargetRepos(
   target: Target,
   editorInstruction: string,
@@ -51,8 +124,8 @@ export async function processTargetRepos(
   context.logger.info("LLM response received.", { attempts: llmResponse.metadata.attempts, outputChars: llmResponse.text.length });
 
   const updatedFileContents = extractYamlOnly(llmResponse.text);
-
-  const formattedFileContents = await maybeFormatYaml(updatedFileContents, context);
+  const mergedFileContents = preserveImportsBlock(currentFileContents, updatedFileContents);
+  const formattedFileContents = await maybeFormatYaml(mergedFileContents, context);
 
   if (formattedFileContents.trim() === currentFileContents.trim()) {
     context.logger.debug("No change was triggered by the instruction.");
@@ -65,8 +138,17 @@ export async function processTargetRepos(
 }
 
 export async function fetchAndParseFileContent(context: Context, target: Target, manifestStore?: Record<string, Manifest>) {
-  const cfgHandler = new ConfigurationHandler(context.logger, context.octokit);
+  const environment = readString((context.config as Record<string, unknown>).environment).trim() || null;
+  const cfgHandler = new ConfigurationHandler(context.logger, context.octokit, environment);
   const config = await cfgHandler.getConfigurationFromRepo(target.owner, target.repo);
+
+  let currentFileContents: string | undefined;
+  try {
+    currentFileContents = await getFileContent(context, target.owner, target.repo, target.filePath);
+  } catch (error) {
+    context.logger.warn("Failed to fetch target config file; falling back to resolved configuration.", { err: error, target });
+  }
+
   if (manifestStore && config.config?.plugins) {
     for (const key of Object.keys(config.config.plugins)) {
       const manifest = config.config.plugins[key];
@@ -75,5 +157,8 @@ export async function fetchAndParseFileContent(context: Context, target: Target,
       }
     }
   }
-  return { currentFileContents: config.rawData, manifests: config.config?.plugins };
+  return {
+    currentFileContents: currentFileContents ?? config.rawData,
+    manifests: config.config?.plugins,
+  };
 }

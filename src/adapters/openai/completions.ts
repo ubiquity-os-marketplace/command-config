@@ -139,6 +139,7 @@ Return ONLY the full YAML file content (no markdown, no code fences, no explanat
 
 Hard requirements:
 - Preserve existing comments, anchors, and overall structure.
+- Preserve the top-level \`imports:\` block exactly as-is (keep it at the top). Only change \`imports\` if the instruction explicitly asks.
 - Keep URLs unchanged unless explicitly instructed.
 - Do NOT add empty objects (avoid \`with: {}\` and avoid \`someKey: {}\` if the plugin has no settings).
 - When adding a new plugin under \`plugins:\`, use the exact plugin key from the catalog when possible.
