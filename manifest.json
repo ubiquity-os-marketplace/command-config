@@ -30,10 +30,6 @@
         "default": ".github/.ubiquity-os.config.yml",
         "type": "string"
       },
-      "devConfigPath": {
-        "default": ".github/.ubiquity-os.config.dev.yml",
-        "type": "string"
-      },
       "autoMerge": {
         "default": false,
         "type": "boolean"

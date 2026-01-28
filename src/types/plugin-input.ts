@@ -12,7 +12,6 @@ export const pluginSettingsSchema = T.Object(
     baseUrl: T.String({ default: "https://ai-ubq-fi.deno.dev" }),
     parserPath: T.String({ default: "https://github.com/ubiquity-os/ubiquity-os-kernel.git" }),
     configPath: T.String({ default: ".github/.ubiquity-os.config.yml" }),
-    devConfigPath: T.String({ default: ".github/.ubiquity-os.config.dev.yml" }),
     autoMerge: T.Boolean({ default: false }),
     model: T.String({
       default: "deepseek/deepseek-r1-0528:free",

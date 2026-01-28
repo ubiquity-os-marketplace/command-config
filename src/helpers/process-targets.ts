@@ -4,6 +4,16 @@ import { Context } from "../types/index";
 import { Target } from "../types/target";
 import { applyChanges } from "./apply-changes";
 
+const CONFIG_PATH_PATTERN = /\.ubiquity-os\.config(?:\.([a-z0-9_-]+))?\.yml$/i;
+
+function inferEnvironmentFromConfigPath(configPath: string): string | null {
+  const match = CONFIG_PATH_PATTERN.exec(configPath.trim());
+  if (!match) return null;
+  const suffix = match[1];
+  if (!suffix) return "production";
+  return suffix.toLowerCase();
+}
+
 async function maybeFormatYaml(content: string, context: Context): Promise<string> {
   if (process.env.JEST_WORKER_ID) return content;
 
@@ -65,7 +75,12 @@ export async function processTargetRepos(
 }
 
 export async function fetchAndParseFileContent(context: Context, target: Target, manifestStore?: Record<string, Manifest>) {
-  const cfgHandler = new ConfigurationHandler(context.logger, context.octokit);
+  const environment = inferEnvironmentFromConfigPath(target.filePath);
+  if (!environment) {
+    context.logger.warn("Unsupported configPath; expected .github/.ubiquity-os.config(.<env>).yml", { filePath: target.filePath });
+    return { currentFileContents: undefined, manifests: undefined };
+  }
+  const cfgHandler = new ConfigurationHandler(context.logger, context.octokit, environment);
   const config = await cfgHandler.getConfigurationFromRepo(target.owner, target.repo);
   if (manifestStore && config.config?.plugins) {
     for (const key of Object.keys(config.config.plugins)) {
