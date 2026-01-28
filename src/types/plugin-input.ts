@@ -13,8 +13,6 @@ export const pluginSettingsSchema = T.Object(
     parserPath: T.String({ default: "https://github.com/ubiquity-os/ubiquity-os-kernel.git" }),
     configPath: T.String({ default: ".github/.ubiquity-os.config.yml" }),
     devConfigPath: T.String({ default: ".github/.ubiquity-os.config.dev.yml" }),
-    environment: T.Optional(T.String()),
-    configPathCandidates: T.Optional(T.Array(T.String())),
     autoMerge: T.Boolean({ default: false }),
     model: T.String({
       default: "deepseek/deepseek-r1-0528:free",

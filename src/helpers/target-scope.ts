@@ -8,25 +8,11 @@ function readString(value: unknown): string {
   return typeof value === "string" ? value : "";
 }
 
-function getConfigPathCandidatesFromSettings(context: Context): string[] {
-  const maybeCandidates = (context.config as Record<string, unknown>).configPathCandidates;
-  if (Array.isArray(maybeCandidates) && maybeCandidates.every((item) => typeof item === "string" && item.trim().length > 0)) {
-    return maybeCandidates;
-  }
-  return [];
-}
-
-function getFallbackConfigPathCandidates(context: Context): string[] {
+function getConfigPathCandidates(context: Context): string[] {
   const configPath = readString(context.config.configPath).trim();
   const devConfigPath = readString(context.config.devConfigPath).trim();
   const candidates = [configPath, devConfigPath].filter((value) => value.length > 0);
   return Array.from(new Set(candidates));
-}
-
-function getConfigPathCandidates(context: Context): string[] {
-  const fromKernel = getConfigPathCandidatesFromSettings(context);
-  if (fromKernel.length) return fromKernel;
-  return getFallbackConfigPathCandidates(context);
 }
 
 function getTargetTypeForConfigPath(context: Context, filePath: string): string {

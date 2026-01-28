@@ -29,10 +29,6 @@ function extractYamlOnly(text: string): string {
   return text.trim();
 }
 
-function readString(value: unknown): string {
-  return typeof value === "string" ? value : "";
-}
-
 function hasTopLevelKey(content: string, key: string): boolean {
   const pattern = new RegExp(`^${key}\\s*:`, "m");
   return pattern.test(content);
@@ -148,8 +144,7 @@ export async function processTargetRepos(
 }
 
 export async function fetchAndParseFileContent(context: Context, target: Target, manifestStore?: Record<string, Manifest>) {
-  const environment = readString((context.config as Record<string, unknown>).environment).trim() || null;
-  const cfgHandler = new ConfigurationHandler(context.logger, context.octokit, environment);
+  const cfgHandler = new ConfigurationHandler(context.logger, context.octokit);
   const config = await cfgHandler.getConfigurationFromRepo(target.owner, target.repo);
 
   let currentFileContents: string | undefined;
