@@ -27,12 +27,7 @@
       },
       "model": {
         "default": "gpt-5.2-codex",
-        "examples": [
-          "gpt-5.2-codex",
-          "gpt-5.2-chat-latest",
-          "gpt-5.1-codex-mini",
-          "gpt-5.1-chat-latest"
-        ],
+        "examples": ["gpt-5.2-codex", "gpt-5.2-chat-latest", "gpt-5.1-codex-mini", "gpt-5.1-chat-latest"],
         "type": "string"
       },
       "reasoningEffort": {
