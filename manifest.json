@@ -63,7 +63,7 @@
         "default": [
           {
             "name": "https://github.com/ubiquity-os/.ubiquity-os.git",
-            "type": "dev"
+            "type": "main"
           }
         ],
         "type": "array",

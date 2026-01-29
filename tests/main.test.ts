@@ -166,7 +166,7 @@ function createContextInner(
       autoMerge: false,
       model: "gpt-5.2-codex",
       reasoningEffort: "medium",
-      defaultTargets: [{ name: `https://github.com/${STRINGS.USER_1}/.ubiquity-os.git`, branch: "main", type: "dev" }],
+      defaultTargets: [{ name: `https://github.com/${STRINGS.USER_1}/.ubiquity-os.git`, branch: "main", type: "main" }],
       ...configOverrides,
     },
     env: {} as Env,

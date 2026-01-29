@@ -32,7 +32,7 @@ export const pluginSettingsSchema = T.Object(
         type: T.Enum({ main: "main", dev: "dev" }, { default: "main" }),
       }),
       {
-        default: [{ name: "https://github.com/ubiquity-os/.ubiquity-os.git", type: "dev" }],
+        default: [{ name: "https://github.com/ubiquity-os/.ubiquity-os.git", type: "main" }],
       }
     ),
   },

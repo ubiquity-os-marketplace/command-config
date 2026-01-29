@@ -1,5 +1,5 @@
 import path from "node:path";
-import { CONFIG_DEV_FULL_PATH, CONFIG_PROD_FULL_PATH } from "@ubiquity-os/plugin-sdk/configuration";
+import { CONFIG_PROD_FULL_PATH } from "@ubiquity-os/plugin-sdk/configuration";
 import { Context } from "../types/index";
 import { Target } from "../types/target";
 import { getFileContent } from "./get-file-content";
@@ -40,12 +40,6 @@ function getConfigPathCandidates(context: Context): string[] {
 function getPrimaryConfigPath(context: Context): string {
   const environment = readEnvironment(context);
   return getConfigPathCandidatesForEnvironment(environment)[0];
-}
-
-function getTargetTypeForConfigPath(filePath: string): string {
-  if (filePath === CONFIG_DEV_FULL_PATH) return "dev";
-  if (filePath === CONFIG_PROD_FULL_PATH) return "config";
-  return "config";
 }
 
 async function tryGetRepoConfigFile(context: Context, owner: string, repo: string, filePath: string, label: string): Promise<string | undefined> {
@@ -114,7 +108,7 @@ async function processRepoConfigs(context: Context, targetMap: Record<string, Ta
     if (!repoConfig) continue;
 
     const repoTarget: Target = {
-      type: getTargetTypeForConfigPath(candidate),
+      type: "config",
       ...baseRepoTarget,
       filePath: candidate,
     };
