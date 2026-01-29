@@ -29,84 +29,6 @@ function extractYamlOnly(text: string): string {
   return text.trim();
 }
 
-function hasTopLevelKey(content: string, key: string): boolean {
-  const pattern = new RegExp(`^${key}\\s*:`, "m");
-  return pattern.test(content);
-}
-
-function extractTopLevelBlock(content: string, key: string): string | null {
-  const lines = content.split(/\r?\n/);
-  const keyPattern = new RegExp(`^${key}\\s*:`); // top-level only (no indentation)
-  let startIndex = -1;
-
-  for (let i = 0; i < lines.length; i += 1) {
-    const line = lines[i];
-    if (line.startsWith(" ") || line.startsWith("\t")) continue;
-    if (keyPattern.test(line)) {
-      startIndex = i;
-      break;
-    }
-  }
-
-  if (startIndex === -1) return null;
-
-  let endIndex = lines.length;
-  for (let i = startIndex + 1; i < lines.length; i += 1) {
-    const line = lines[i];
-    if (line.trim().length === 0) continue;
-    if (!line.startsWith(" ") && !line.startsWith("\t") && /^[a-zA-Z0-9_-]+\s*:/.test(line)) {
-      endIndex = i;
-      break;
-    }
-  }
-
-  return lines.slice(startIndex, endIndex).join("\n").trimEnd();
-}
-
-function injectBlockAtTop(content: string, block: string): string {
-  const lines = content.split(/\r?\n/);
-  let insertIndex = 0;
-
-  while (insertIndex < lines.length) {
-    const line = lines[insertIndex];
-    const trimmed = line.trim();
-    if (trimmed === "" || trimmed.startsWith("#") || trimmed === "---") {
-      insertIndex += 1;
-      continue;
-    }
-    break;
-  }
-
-  const prefix = lines.slice(0, insertIndex);
-  const suffix = lines.slice(insertIndex);
-  const blockLines = block.split(/\r?\n/);
-  const combined = [...prefix, ...blockLines];
-  if (suffix.length) {
-    if (combined.length && combined[combined.length - 1].trim() !== "") {
-      combined.push("");
-    }
-  }
-  return [...combined, ...suffix].join("\n");
-}
-
-function shouldPreserveImports(editorInstruction: string): boolean {
-  const normalized = editorInstruction.trim().toLowerCase().replace(/[’‘]/g, "'");
-  const hasImportMention = /\bimports?\b/.test(normalized);
-  if (!hasImportMention) return true;
-
-  const preservePatterns = [/\b(keep|preserve|retain|leave)\s+imports?\b/, /\b(do\s+not|don'?t|no)\s+(remove|change|modify|edit|drop|delete)\s+imports?\b/];
-  return preservePatterns.some((pattern) => pattern.test(normalized));
-}
-
-function preserveImportsBlock(original: string, updated: string, editorInstruction: string): string {
-  if (!hasTopLevelKey(original, "imports")) return updated;
-  if (hasTopLevelKey(updated, "imports")) return updated;
-  if (!shouldPreserveImports(editorInstruction)) return updated;
-  const block = extractTopLevelBlock(original, "imports");
-  if (!block) return updated;
-  return injectBlockAtTop(updated, block);
-}
-
 export async function processTargetRepos(
   target: Target,
   editorInstruction: string,
@@ -130,8 +52,7 @@ export async function processTargetRepos(
   context.logger.info("LLM response received.", { attempts: llmResponse.metadata.attempts, outputChars: llmResponse.text.length });
 
   const updatedFileContents = extractYamlOnly(llmResponse.text);
-  const mergedFileContents = preserveImportsBlock(currentFileContents, updatedFileContents, editorInstruction);
-  const formattedFileContents = await maybeFormatYaml(mergedFileContents, context);
+  const formattedFileContents = await maybeFormatYaml(updatedFileContents, context);
 
   if (formattedFileContents.trim() === currentFileContents.trim()) {
     context.logger.debug("No change was triggered by the instruction.");
