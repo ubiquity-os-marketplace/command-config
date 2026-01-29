@@ -5,10 +5,6 @@ import { Target } from "../types/target";
 import { getFileContent } from "./get-file-content";
 import { checkOrgPermissions, checkUserRepoPermissions } from "./user-permission";
 
-const ENVIRONMENT_TO_CONFIG_SUFFIX: Record<string, string> = {
-  development: "dev",
-};
-
 const VALID_CONFIG_SUFFIX = /^[a-z0-9][a-z0-9_-]*$/i;
 
 function normalizeEnvironmentName(environment: string | null | undefined): string {
@@ -26,15 +22,11 @@ function getConfigPathCandidatesForEnvironment(environment: string | null | unde
     return [CONFIG_PROD_FULL_PATH];
   }
 
-  const suffix = ENVIRONMENT_TO_CONFIG_SUFFIX[normalized] ?? normalized;
-  if (suffix === "dev") {
-    return [CONFIG_DEV_FULL_PATH];
-  }
-  if (!VALID_CONFIG_SUFFIX.test(suffix)) {
-    return [CONFIG_DEV_FULL_PATH];
+  if (!VALID_CONFIG_SUFFIX.test(normalized)) {
+    return [CONFIG_PROD_FULL_PATH, CONFIG_DEV_FULL_PATH];
   }
 
-  return [`.github/.ubiquity-os.config.${suffix}.yml`, CONFIG_PROD_FULL_PATH];
+  return [`.github/.ubiquity-os.config.${normalized}.yml`, CONFIG_PROD_FULL_PATH];
 }
 
 function readEnvironment(context: Context): string {
