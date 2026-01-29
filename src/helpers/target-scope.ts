@@ -16,14 +16,14 @@ function normalizeEnvironmentName(environment: string | null | undefined): strin
 function getConfigPathCandidatesForEnvironment(environment: string | null | undefined): string[] {
   const normalized = normalizeEnvironmentName(environment);
   if (!normalized) {
-    return [CONFIG_PROD_FULL_PATH, CONFIG_DEV_FULL_PATH];
+    return [CONFIG_PROD_FULL_PATH];
   }
   if (normalized === "production" || normalized === "prod") {
     return [CONFIG_PROD_FULL_PATH];
   }
 
   if (!VALID_CONFIG_SUFFIX.test(normalized)) {
-    return [CONFIG_PROD_FULL_PATH, CONFIG_DEV_FULL_PATH];
+    return [CONFIG_PROD_FULL_PATH];
   }
 
   return [`.github/.ubiquity-os.config.${normalized}.yml`, CONFIG_PROD_FULL_PATH];
@@ -37,15 +37,9 @@ function getConfigPathCandidates(context: Context): string[] {
   return getConfigPathCandidatesForEnvironment(readEnvironment(context));
 }
 
-function getPrimaryConfigPath(context: Context, targetType?: string): string {
+function getPrimaryConfigPath(context: Context): string {
   const environment = readEnvironment(context);
-  if (environment) {
-    return getConfigPathCandidatesForEnvironment(environment)[0];
-  }
-  if (targetType === "dev") {
-    return CONFIG_DEV_FULL_PATH;
-  }
-  return CONFIG_PROD_FULL_PATH;
+  return getConfigPathCandidatesForEnvironment(environment)[0];
 }
 
 function getTargetTypeForConfigPath(filePath: string): string {
@@ -88,7 +82,7 @@ async function processBaseTargets(context: Context): Promise<Record<string, Targ
       repo,
       localDir: path.join(owner, repo),
       url: target.name,
-      filePath: getPrimaryConfigPath(context, target.type),
+      filePath: getPrimaryConfigPath(context),
       readonly: !hasRepoPermission,
     });
   }
