@@ -1,23 +1,64 @@
 import path from "node:path";
+import { CONFIG_DEV_FULL_PATH, CONFIG_PROD_FULL_PATH } from "@ubiquity-os/plugin-sdk/configuration";
 import { Context } from "../types/index";
 import { Target } from "../types/target";
 import { getFileContent } from "./get-file-content";
 import { checkOrgPermissions, checkUserRepoPermissions } from "./user-permission";
 
-function readString(value: unknown): string {
-  return typeof value === "string" ? value : "";
+const ENVIRONMENT_TO_CONFIG_SUFFIX: Record<string, string> = {
+  development: "dev",
+};
+
+const VALID_CONFIG_SUFFIX = /^[a-z0-9][a-z0-9_-]*$/i;
+
+function normalizeEnvironmentName(environment: string | null | undefined): string {
+  return String(environment ?? "")
+    .trim()
+    .toLowerCase();
+}
+
+function getConfigPathCandidatesForEnvironment(environment: string | null | undefined): string[] {
+  const normalized = normalizeEnvironmentName(environment);
+  if (!normalized) {
+    return [CONFIG_PROD_FULL_PATH, CONFIG_DEV_FULL_PATH];
+  }
+  if (normalized === "production" || normalized === "prod") {
+    return [CONFIG_PROD_FULL_PATH];
+  }
+
+  const suffix = ENVIRONMENT_TO_CONFIG_SUFFIX[normalized] ?? normalized;
+  if (suffix === "dev") {
+    return [CONFIG_DEV_FULL_PATH];
+  }
+  if (!VALID_CONFIG_SUFFIX.test(suffix)) {
+    return [CONFIG_DEV_FULL_PATH];
+  }
+
+  return [`.github/.ubiquity-os.config.${suffix}.yml`, CONFIG_PROD_FULL_PATH];
+}
+
+function readEnvironment(context: Context): string {
+  return typeof context.config.environment === "string" ? context.config.environment.trim() : "";
 }
 
 function getConfigPathCandidates(context: Context): string[] {
-  const configPath = readString(context.config.configPath).trim();
-  const devConfigPath = readString(context.config.devConfigPath).trim();
-  const candidates = [configPath, devConfigPath].filter((value) => value.length > 0);
-  return Array.from(new Set(candidates));
+  return getConfigPathCandidatesForEnvironment(readEnvironment(context));
 }
 
-function getTargetTypeForConfigPath(context: Context, filePath: string): string {
-  if (filePath === context.config.devConfigPath) return "dev";
-  if (filePath === context.config.configPath) return "config";
+function getPrimaryConfigPath(context: Context, targetType?: string): string {
+  const environment = readEnvironment(context);
+  if (environment) {
+    return getConfigPathCandidatesForEnvironment(environment)[0];
+  }
+  if (targetType === "dev") {
+    return CONFIG_DEV_FULL_PATH;
+  }
+  return CONFIG_PROD_FULL_PATH;
+}
+
+function getTargetTypeForConfigPath(filePath: string): string {
+  if (filePath === CONFIG_DEV_FULL_PATH) return "dev";
+  if (filePath === CONFIG_PROD_FULL_PATH) return "config";
   return "config";
 }
 
@@ -55,7 +96,7 @@ async function processBaseTargets(context: Context): Promise<Record<string, Targ
       repo,
       localDir: path.join(owner, repo),
       url: target.name,
-      filePath: target.type === "dev" ? config.devConfigPath : config.configPath,
+      filePath: getPrimaryConfigPath(context, target.type),
       readonly: !hasRepoPermission,
     });
   }
@@ -87,7 +128,7 @@ async function processRepoConfigs(context: Context, targetMap: Record<string, Ta
     if (!repoConfig) continue;
 
     const repoTarget: Target = {
-      type: getTargetTypeForConfigPath(context, candidate),
+      type: getTargetTypeForConfigPath(candidate),
       ...baseRepoTarget,
       filePath: candidate,
     };
@@ -109,9 +150,10 @@ async function getConfig(context: Context, orgName: string, repoName: string, co
 }
 
 async function processOrgConfig(context: Context, targetMap: Record<string, Target>): Promise<void> {
-  const { payload, config, logger } = context;
+  const { payload, logger } = context;
   const orgName = payload.repository.owner.login || (payload.organization && payload.organization.login);
-  let filePath = config.configPath;
+  const candidatePaths = getConfigPathCandidates(context);
+  let filePath = candidatePaths[0] ?? CONFIG_PROD_FULL_PATH;
 
   if (!orgName) {
     const message = "Organization not found in payload.";
@@ -121,7 +163,7 @@ async function processOrgConfig(context: Context, targetMap: Record<string, Targ
 
   try {
     let orgConfig: { content: string; configPath: string } | null = null;
-    for (const candidate of getConfigPathCandidates(context)) {
+    for (const candidate of candidatePaths) {
       orgConfig = await getConfig(context, orgName, ".ubiquity-os", candidate);
       if (orgConfig?.content) {
         break;

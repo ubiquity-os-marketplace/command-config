@@ -144,7 +144,8 @@ export async function processTargetRepos(
 }
 
 export async function fetchAndParseFileContent(context: Context, target: Target, manifestStore?: Record<string, Manifest>) {
-  const cfgHandler = new ConfigurationHandler(context.logger, context.octokit);
+  const environment = typeof context.config.environment === "string" ? context.config.environment.trim() : "";
+  const cfgHandler = new ConfigurationHandler(context.logger, context.octokit, environment || null);
   const config = await cfgHandler.getConfigurationFromRepo(target.owner, target.repo);
 
   let currentFileContents: string | undefined;

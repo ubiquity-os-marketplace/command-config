@@ -163,10 +163,9 @@ function createContextInner(
     },
     logger: new Logs("debug"),
     config: {
-      parserPath: `https://github.com/${STRINGS.USER_1}/ubiquity-os-kernel.git`,
-      configPath: ".github/.ubiquity-os.config.yml",
-      devConfigPath: ".github/.ubiquity-os.config.dev.yml",
       autoMerge: false,
+      model: "gpt-5.2-codex",
+      reasoningEffort: "medium",
       defaultTargets: [{ name: `https://github.com/${STRINGS.USER_1}/.ubiquity-os.git`, branch: "main", type: "dev" }],
       ...configOverrides,
     },

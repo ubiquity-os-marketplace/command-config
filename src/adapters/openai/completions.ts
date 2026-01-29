@@ -150,6 +150,7 @@ The output is validated; if invalid, it will be rejected and retried.`,
     let attempts = 0;
     let lastError: string | undefined;
     const reasoningEffort = this._context.config.reasoningEffort;
+    const model = typeof this._context.config.model === "string" ? this._context.config.model.trim() : "";
 
     while (attempts < maxRetries) {
       attempts++;
@@ -161,6 +162,7 @@ The output is validated; if invalid, it will be rejected and retried.`,
           messages,
           max_tokens: 4000,
           temperature: attempts > 1 ? 0.2 : 0,
+          ...(model ? { model } : {}),
           ...(reasoningEffort !== undefined ? { reasoning_effort: reasoningEffort } : {}),
         } as Parameters<typeof callLlm>[0],
         this._context
