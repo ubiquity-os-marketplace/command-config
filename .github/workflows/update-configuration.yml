@@ -29,6 +29,7 @@ jobs:
       - uses: ubiquity-os/action-deploy-plugin@main
         with:
           treatAsEsm: true
+          bundleSingleFile: true
           sourcemap: true
           pluginEntry: "${{ github.workspace }}/src/action.ts"
         env:
