@@ -8,6 +8,7 @@ on:
         required: true
         default: "ubiquity-os/ubiquity-os-kernel"
   push:
+  delete:
 
 jobs:
   update:
@@ -26,8 +27,11 @@ jobs:
           mkdir -p src/config
           curl -o src/config/plugin-configuration.ts "https://raw.githubusercontent.com/${PARSER_PATH}/main/src/config/plugin-configuration.ts"
 
-      - uses: Meniole/action-deploy-plugin@feat/27-generate-manifest-metadata
+      - uses: Meniole/action-deploy-plugin@feat/320-dist-artifact-branches
         with:
+          action: ${{ github.event_name == 'delete' && 'delete' || 'publish' }}
+          sourceRef: ${{ github.event.ref || github.event.workflow_run.head_branch || github.ref_name }}
+          artifactPrefix: dist/
           treatAsEsm: true
           sourcemap: true
           pluginEntry: "${{ github.workspace }}/src/action.ts"
