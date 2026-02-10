@@ -26,12 +26,13 @@ jobs:
           mkdir -p src/config
           curl -o src/config/plugin-configuration.ts "https://raw.githubusercontent.com/${PARSER_PATH}/main/src/config/plugin-configuration.ts"
 
-      - uses: ubiquity-os/action-deploy-plugin@main
+      - uses: Meniole/action-deploy-plugin@feat/27-generate-manifest-metadata
         with:
           treatAsEsm: true
           bundleSingleFile: true
           sourcemap: true
           pluginEntry: "${{ github.workspace }}/src/action.ts"
+          excludeSupportedEvents: "issue_comment.created"
         env:
           APP_ID: ${{ secrets.APP_ID }}
           APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
