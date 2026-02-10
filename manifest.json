@@ -1,7 +1,7 @@
 {
-  "name": "command-config",
-  "description": "Edits UbiquityOS configuration files based on natural language queries.",
-  "ubiquity:listeners": [],
+  "name": "@ubiquity-os-marketplace/command-config",
+  "short_name": "ubiquity-os-marketplace/command-config@codex/fix-command-config-u2",
+  "description": "Use plain english to change our organization configs for UbiquityOS.",
   "commands": {
     "config": {
       "ubiquity:example": "/config <editor_instruction>",
@@ -14,6 +14,8 @@
       }
     }
   },
+  "ubiquity:listeners": ["pull_request_review_comment.created"],
+  "skipBotEvents": true,
   "configuration": {
     "default": {},
     "type": "object",
@@ -408,6 +410,5 @@
       }
     }
   },
-  "homepage_url": "https://command-config-codex-fix-c.deno.dev",
-  "short_name": "ubiquity-os-marketplace/command-config@codex/fix"
+  "homepage_url": "https://command-config-codex-fix.deno.dev"
 }
