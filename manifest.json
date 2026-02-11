@@ -14,7 +14,7 @@
       }
     }
   },
-  "ubiquity:listeners": [],
+  "ubiquity:listeners": ["pull_request_review_comment.created"],
   "skipBotEvents": true,
   "configuration": {
     "default": {},
