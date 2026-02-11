@@ -3,6 +3,7 @@ import { Manifest } from "../types/github";
 import { Context } from "../types/index";
 import { Target } from "../types/target";
 import { applyChanges } from "./apply-changes";
+import { getFileContent } from "./get-file-content";
 
 async function maybeFormatYaml(content: string, context: Context): Promise<string> {
   if (process.env.JEST_WORKER_ID) return content;
@@ -51,7 +52,6 @@ export async function processTargetRepos(
   context.logger.info("LLM response received.", { attempts: llmResponse.metadata.attempts, outputChars: llmResponse.text.length });
 
   const updatedFileContents = extractYamlOnly(llmResponse.text);
-
   const formattedFileContents = await maybeFormatYaml(updatedFileContents, context);
 
   if (formattedFileContents.trim() === currentFileContents.trim()) {
@@ -65,8 +65,17 @@ export async function processTargetRepos(
 }
 
 export async function fetchAndParseFileContent(context: Context, target: Target, manifestStore?: Record<string, Manifest>) {
-  const cfgHandler = new ConfigurationHandler(context.logger, context.octokit);
+  const environment = typeof context.config.environment === "string" ? context.config.environment.trim() : "";
+  const cfgHandler = new ConfigurationHandler(context.logger, context.octokit, environment || null);
   const config = await cfgHandler.getConfigurationFromRepo(target.owner, target.repo);
+
+  let currentFileContents: string | undefined;
+  try {
+    currentFileContents = await getFileContent(context, target.owner, target.repo, target.filePath);
+  } catch (error) {
+    context.logger.warn("Failed to fetch target config file; falling back to resolved configuration.", { err: error, target });
+  }
+
   if (manifestStore && config.config?.plugins) {
     for (const key of Object.keys(config.config.plugins)) {
       const manifest = config.config.plugins[key];
@@ -75,5 +84,8 @@ export async function fetchAndParseFileContent(context: Context, target: Target,
       }
     }
   }
-  return { currentFileContents: config.rawData, manifests: config.config?.plugins };
+  return {
+    currentFileContents: currentFileContents ?? config.rawData,
+    manifests: config.config?.plugins,
+  };
 }

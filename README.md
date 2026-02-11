@@ -27,9 +27,8 @@
 plugins:
   http://localhost:4000:
     with:
-      parserPath: "https://github.com/ubiquity-os/ubiquity-os-kernel.git"
-      configPath: ".github/.ubiquity-os.config.yml"
-      devConfigPath: ".github/.ubiquity-os.config.dev.yml"
+      model: "gpt-5.2-codex"
+      reasoningEffort: "medium"
       autoMerge: false
       defaultTargets:
         - name: "https://github.com/ubiquity-os/.ubiquity-os.git"
