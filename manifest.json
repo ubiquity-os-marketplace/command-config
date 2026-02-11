@@ -1,6 +1,6 @@
 {
   "name": "@ubiquity-os-marketplace/command-config",
-  "short_name": "ubiquity-os-marketplace/command-config@codex/fix-command-config-u2",
+  "short_name": "ubiquity-os-marketplace/command-config@development",
   "description": "Use plain english to change our organization configs for UbiquityOS.",
   "commands": {
     "config": {
