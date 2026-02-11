@@ -26,7 +26,7 @@ jobs:
           mkdir -p src/config
           curl -o src/config/plugin-configuration.ts "https://raw.githubusercontent.com/${PARSER_PATH}/main/src/config/plugin-configuration.ts"
 
-      - uses: Meniole/action-deploy-plugin@feat/27-generate-manifest-metadata
+      - uses: ubiquity-os/action-deploy-plugin@main
         with:
           treatAsEsm: true
           bundleSingleFile: true
