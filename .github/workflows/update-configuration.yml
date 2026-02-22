@@ -33,9 +33,10 @@ jobs:
           sourceRef: ${{ github.event.ref || github.event.workflow_run.head_branch || github.ref_name }}
           artifactPrefix: dist/
           treatAsEsm: true
+          bundleSingleFile: true
           sourcemap: true
           pluginEntry: "${{ github.workspace }}/src/action.ts"
-          excludeSupportedEvents: "issue_comment.created"
+          excludeSupportedEvents: "issue_comment.created,pull_request_review_comment.created"
         env:
           APP_ID: ${{ secrets.APP_ID }}
           APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}

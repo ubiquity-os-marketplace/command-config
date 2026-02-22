@@ -1,3 +1,4 @@
+import { Buffer } from "node:buffer";
 import { http, HttpResponse } from "msw";
 import { db } from "./db";
 import issueTemplate from "./issue-template";
@@ -170,11 +171,12 @@ export const handlers = [
   }),
   // Get git ref
   http.get("https://api.github.com/repos/:owner/:repo/git/ref/:ref*", ({ params }) => {
+    const refParam = normalizePathParam(params.ref);
     const ref = db.git_refs.findFirst({
       where: {
         owner: { equals: params.owner as string },
         repo: { equals: params.repo as string },
-        ref: { equals: (params.ref as string).replace("heads/", "") },
+        ref: { equals: refParam.replace("heads/", "") },
       },
     });
     return HttpResponse.json({ object: { sha: ref?.sha } });
@@ -192,34 +194,42 @@ export const handlers = [
     return HttpResponse.json(newRef);
   }),
   // Get file content
-  http.get("https://api.github.com/repos/:owner/:repo/contents/:path*", ({ params }) => {
+  http.get("https://api.github.com/repos/:owner/:repo/contents/:path*", ({ params, request }) => {
+    const path = normalizePathParam(params.path);
     const file = db.git_files.findFirst({
       where: {
         owner: { equals: params.owner as string },
         repo: { equals: params.repo as string },
-        path: { equals: params.path as string },
+        path: { equals: path },
       },
     });
     if (!file) {
       return new HttpResponse(null, { status: 404 });
     }
 
+    const accept = request.headers.get("accept") ?? "";
+    if (accept.includes("application/vnd.github.v3.raw") || accept.includes("application/vnd.github.raw")) {
+      const decoded = Buffer.from(file.content, "base64").toString("utf-8");
+      return new HttpResponse(decoded);
+    }
+
     return HttpResponse.json({
       sha: file.sha,
       content: file.content,
       size: file.content.length,
-      path: params.path,
+      path,
       type: "file",
     });
   }),
   // Create or update file
   http.put("https://api.github.com/repos/:owner/:repo/contents/:path*", async ({ params, request }) => {
     const { content, sha } = await getValue(request.body);
+    const path = normalizePathParam(params.path);
     const newFile = db.git_files.create({
       id: Date.now(),
       owner: params.owner as string,
       repo: params.repo as string,
-      path: params.path as string,
+      path,
       sha: sha || `${Date.now()}`,
       content,
     });
@@ -264,6 +274,20 @@ export const handlers = [
     });
   }),
 ];
+
+function normalizePathParam(param: string | readonly string[] | undefined): string {
+  let raw = "";
+  if (typeof param === "string") {
+    raw = param;
+  } else if (Array.isArray(param)) {
+    raw = param.join("/");
+  }
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return raw;
+  }
+}
 
 async function getValue(body: ReadableStream<Uint8Array> | null) {
   if (body) {
