@@ -19,3 +19,6 @@ test-dashboard.md
 
 #vscode
 *.code-workspace
+
+manifest.json
+dist/
