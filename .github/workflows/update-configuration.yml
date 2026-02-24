@@ -27,10 +27,10 @@ jobs:
           mkdir -p src/config
           curl -o src/config/plugin-configuration.ts "https://raw.githubusercontent.com/${PARSER_PATH}/main/src/config/plugin-configuration.ts"
 
-      - uses: ubiquity-os/action-deploy-plugin
+      - uses: ubiquity-os/action-deploy-plugin@main
         with:
           action: ${{ github.event_name == 'delete' && 'delete' || 'publish' }}
-          sourceRef: ${{ github.event.ref || github.event.workflow_run.head_branch || github.ref_name }}
+          sourceRef: ${{ github.ref_name }}
           artifactPrefix: dist/
           treatAsEsm: true
           bundleSingleFile: true
