@@ -27,7 +27,7 @@ jobs:
           mkdir -p src/config
           curl -o src/config/plugin-configuration.ts "https://raw.githubusercontent.com/${PARSER_PATH}/main/src/config/plugin-configuration.ts"
 
-      - uses: ubiquity-os/action-deploy-plugin@feat/320-dist-artifact-branches
+      - uses: ubiquity-os/action-deploy-plugin@main
         with:
           action: ${{ github.event_name == 'delete' && 'delete' || 'publish' }}
           sourceRef: ${{ github.ref_name }}
