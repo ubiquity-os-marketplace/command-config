@@ -23,7 +23,9 @@
     "jest:test": "jest --coverage",
     "worker": "wrangler dev --env dev --port 4000",
     "start": "bun --port 4000 --watch --no-clear-screen src/worker.ts",
-    "prepare": "husky"
+    "prepare": "bun run prepare:manifest && husky",
+    "prepare:manifest": "bunx @ubiquity-os/plugin-manifest-tool@latest",
+    "prebuild": "bun run prepare:manifest"
   },
   "keywords": [
     "typescript",

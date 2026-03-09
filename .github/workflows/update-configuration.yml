@@ -8,6 +8,7 @@ on:
         required: true
         default: "ubiquity-os/ubiquity-os-kernel"
   push:
+  delete:
 
 jobs:
   update:
@@ -28,6 +29,7 @@ jobs:
 
       - uses: ubiquity-os/action-deploy-plugin@main
         with:
+          action: ${{ github.event_name == 'delete' && 'delete' || 'publish' }}
           treatAsEsm: true
           bundleSingleFile: true
           sourcemap: true
