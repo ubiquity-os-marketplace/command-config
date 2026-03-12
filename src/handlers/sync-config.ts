@@ -11,8 +11,8 @@ export async function syncConfigs(context: Context) {
     throw new Error(message);
   }
 
-  // Ignore if the command is not /config
-  if (payload.comment.body.trim() !== "/config") {
+  // Ignore if the command is not /config, and if it is not an LLM command
+  if (payload.comment.body.trim() !== "/config" && !context.command) {
     throw logger.debug("Command is not /config. Skipping.");
   }
 
