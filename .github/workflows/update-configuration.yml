@@ -18,14 +18,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Fetch latest configuration
-        env:
-          PARSER_PATH: ${{ github.event.inputs.parserPath || 'ubiquity-os/ubiquity-os-kernel' }}
-        run: |
-          mkdir -p src/config
-          curl -o src/config/plugin-configuration.ts "https://raw.githubusercontent.com/${PARSER_PATH}/main/src/config/plugin-configuration.ts"
+        uses: actions/checkout@v6
 
       - uses: ubiquity-os/action-deploy-plugin@main
         with:

@@ -11,6 +11,11 @@ export async function syncConfigs(context: Context) {
     throw new Error(message);
   }
 
+  // Ignore if the command is not /config
+  if (payload.comment.body.trim() !== "/config") {
+    throw logger.debug("Command is not /config. Skipping.");
+  }
+
   // Fetch the Editor Instruction
   const extractedInstructions = extractEditorInstruction(context);
   if (!extractedInstructions) {
