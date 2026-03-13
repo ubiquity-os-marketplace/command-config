@@ -1,0 +1,38 @@
+name: "@ubiquity-os-marketplace/command-config"
+description: "Edit UbiquityOS configuration files from plain-English instructions."
+
+inputs:
+  stateId:
+    description: "State Id"
+    required: false
+  eventName:
+    description: "Event Name"
+    required: false
+  eventPayload:
+    description: "Event Payload"
+    required: false
+  settings:
+    description: "Settings"
+    required: false
+  authToken:
+    description: "Auth Token"
+    required: false
+  ubiquityKernelToken:
+    description: "Kernel attestation token (optional)"
+    required: false
+  kernelPublicKey:
+    description: "Kernel public key PEM for signature verification (optional)"
+    required: false
+  ref:
+    description: "Ref"
+    required: false
+  signature:
+    description: "The kernel signature"
+    required: false
+  command:
+    description: "Command from the Kernel"
+    required: false
+
+runs:
+  using: "node24"
+  main: "dist/index.cjs"
