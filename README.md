@@ -16,7 +16,7 @@
 - If your plugin is to be used as a slash command which should have faster response times as opposed to longer running GitHub action tasks, you should use the `worker` type.
 
 1. Ensure you understand and have setup the [kernel](https://github.com/ubiquity/ubiquibot-kernel).
-2. Update [compute.yml](./.github/workflows/compute.yml) with your plugin's name and update the `id`.
+2. Update [action.yml](./action.yml) with your plugin's name and description. The [compute.yml](./.github/workflows/compute.yml) workflow is only a thin wrapper that dispatches the root action from the published artifact branch.
 3. Update [context.ts](./src/types/context.ts) with the events that your plugin will fire on.
 4. Update [manifest.json](./manifest.json) with a proper description of your plugin.
 5. Update [plugin-input.ts](./src/types/plugin-input.ts) to match the `with:` settings in your org or repo level configuration.
@@ -77,7 +77,7 @@ GitHub Action Secrets.
 - Ensure the kernel is running and listening for events.
 - Fire an event in/to the repo where the kernel is installed. This can be done in a number of ways, the easiest being via the GitHub UI or using the GitHub API, such as posting a comment, opening an issue, etc in the org/repo where the kernel is installed.
 - The kernel will process the event and dispatch it using the settings defined in your `.ubiquibot-config.yml`.
-- The `compute.yml` workflow will run and execute your plugin's logic.
+- The `compute.yml` workflow will run from the published `dist/<source-branch>` artifact branch and delegate execution to the repo-root `action.yml`.
 - You can view the logs in the Actions tab of your repo.
 
 [Nektos Act](https://github.com/nektos/act) - a tool for running GitHub Actions locally.

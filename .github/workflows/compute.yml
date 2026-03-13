@@ -31,20 +31,24 @@ jobs:
     runs-on: ubuntu-latest
     permissions: write-all
     environment: ${{ (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) && 'main' || 'development' }}
-    env:
-      PLUGIN_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      KERNEL_PUBLIC_KEY: ${{ (github.event.sender.type == 'Bot' && github.event.inputs.kernelPublicKey) || secrets.KERNEL_PUBLIC_KEY }}
-      LOG_LEVEL: ${{ secrets.LOG_LEVEL || 'info' }}
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
       - name: ${{ github.event.repository.name }}
-        run: bun ./src/action.ts
-        id: plugin-name
+        uses: ./
+        with:
+          stateId: ${{ github.event.inputs.stateId }}
+          eventName: ${{ github.event.inputs.eventName }}
+          eventPayload: ${{ github.event.inputs.eventPayload }}
+          settings: ${{ github.event.inputs.settings }}
+          authToken: ${{ github.event.inputs.authToken }}
+          ubiquityKernelToken: ${{ github.event.inputs.ubiquityKernelToken }}
+          kernelPublicKey: ${{ github.event.inputs.kernelPublicKey }}
+          ref: ${{ github.event.inputs.ref }}
+          signature: ${{ github.event.inputs.signature }}
+          command: ${{ github.event.inputs.command }}
+        env:
+          PLUGIN_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          KERNEL_PUBLIC_KEY: ${{ (github.event.sender.type == 'Bot' && github.event.inputs.kernelPublicKey) || secrets.KERNEL_PUBLIC_KEY }}
+          LOG_LEVEL: ${{ secrets.LOG_LEVEL || 'info' }}
