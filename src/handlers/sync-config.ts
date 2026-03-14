@@ -8,12 +8,12 @@ export async function syncConfigs(context: Context) {
   if (payload.comment.user?.type === "Bot") {
     const message = "Comment is from a bot. Skipping.";
     logger.debug(message);
-    throw new Error(message);
+    return { status: 304, reason: message };
   }
 
   // Ignore if the command is not /config, and if it is not an LLM command
   if (!payload.comment.body.trim().startsWith("/config") && !context.command) {
-    throw logger.debug("Command is not /config. Skipping.");
+    return { status: 304, reason: logger.debug("Command is not /config. Skipping.").logMessage.raw };
   }
 
   // Fetch the Editor Instruction
