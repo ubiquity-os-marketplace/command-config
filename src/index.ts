@@ -7,12 +7,11 @@ import { createAdapters } from "./adapters/index";
  * The main plugin function. Split for easier testing.
  */
 export async function runPlugin(context: Context) {
-  const { logger, eventName, commentHandler } = context;
+  const { logger, eventName } = context;
 
   context.adapters = createAdapters(context);
 
   if (isCommentEvent(context)) {
-    await commentHandler.postComment(context, logger.info("Processing configuration change request..."));
     return await syncConfigs(context);
   }
 

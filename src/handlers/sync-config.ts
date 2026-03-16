@@ -2,6 +2,10 @@ import { checkUserPermissions } from "../helpers/user-permission";
 import { Context } from "../types/index";
 import { syncAgent } from "./sync-configs-agent";
 
+export function isSlashCommand(context: Context) {
+  return context.payload.comment.body.trim().startsWith("/config");
+}
+
 export async function syncConfigs(context: Context) {
   const { payload, logger, eventName, commentHandler } = context;
 
@@ -12,9 +16,11 @@ export async function syncConfigs(context: Context) {
   }
 
   // Ignore if the command is not /config, and if it is not an LLM command
-  if (!payload.comment.body.trim().startsWith("/config") && !context.command) {
+  if (!isSlashCommand(context) && !context.command) {
     return { status: 304, reason: logger.debug("Command is not /config. Skipping.").logMessage.raw };
   }
+
+  await commentHandler.postComment(context, logger.info("Processing configuration change request..."));
 
   // Fetch the Editor Instruction
   const extractedInstructions = extractEditorInstruction(context);
