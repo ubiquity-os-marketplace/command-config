@@ -79,6 +79,22 @@ describe("Plugin tests", () => {
       expect(pulls[0].merged).toBe(true);
     });
 
+    it("Should fall back to raw comment text when parsed command parameters are empty", async () => {
+      const { context } = createContext("/config update dependencies");
+      context.command = {
+        name: "config",
+        parameters: {},
+      };
+
+      await runPlugin(context);
+      const comments = db.issueComments.getAll();
+      const lastComment = comments[comments.length - 1].body;
+
+      expect(lastComment).toMatch(/\[!TIP\]/);
+      expect(lastComment).toMatch(/- https:\/\/github.com\//);
+      expect(db.pulls.getAll()).toHaveLength(1);
+    });
+
     it("Should handle missing editor instructions", async () => {
       const { context } = createContext("/config");
       try {

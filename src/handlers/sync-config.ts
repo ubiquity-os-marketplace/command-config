@@ -71,12 +71,9 @@ function extractEditorInstruction(context: Context): { editorInstruction: string
   const body = payload.comment.body.trim();
   if (command && command.name === "config") {
     const editorInstruction = command.parameters.editor_instruction ?? command.parameters.editorInstruction;
-    if (typeof editorInstruction !== "string" || editorInstruction.trim() === "") {
-      const message = "Editor instruction cannot be empty. Please provide editing instructions.";
-      logger.warn(message);
-      throw new Error(message);
+    if (typeof editorInstruction === "string" && editorInstruction.trim() !== "") {
+      return { editorInstruction: editorInstruction.trim() };
     }
-    return { editorInstruction };
   }
 
   if (body.startsWith("/config")) {

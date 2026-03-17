@@ -42,10 +42,14 @@ export async function syncAgent(editorInstruction: string, context: Context): Pr
       const prUrl = await processTargetRepos(target, editorInstruction, context, manifestStore);
       if (prUrl) prUrls.push(prUrl);
     } catch (error) {
-      logger.warn(`Failed to process the target.`, {
-        err: error instanceof Error ? { message: error.message, stack: error.stack } : error,
-        target: JSON.stringify(target),
-      });
+      await context.commentHandler.postComment(
+        context,
+        logger.warn(`Failed to process the target ${target.url}.`, {
+          err: error instanceof Error ? { message: error.message, stack: error.stack } : error,
+          target: JSON.stringify(target),
+        }),
+        { updateComment: true }
+      );
       continue;
     }
   }
