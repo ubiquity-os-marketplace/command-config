@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.2.0](https://github.com/ubiquity-os-marketplace/command-config/compare/v1.1.0...v1.2.0) (2025-12-15)
+
+
+### Features
+
+* manifests from the marketplace org are fetched for the context ([3a846be](https://github.com/ubiquity-os-marketplace/command-config/commit/3a846be80bfb2a0ca79fb0b07cfc2ac7cafd50dc))
+
+
+### Bug Fixes
+
+* add `stripCodeFences` helper with tests and integrate into OpenAI completions ([1a2ebc0](https://github.com/ubiquity-os-marketplace/command-config/commit/1a2ebc08655460021b5324eb51d88047f810ad25))
+* add `stripCodeFences` helper with tests and integrate into OpenAI completions ([0204494](https://github.com/ubiquity-os-marketplace/command-config/commit/020449417ce88627500da5234a9cd85f5a517109))
+* adjust validator to use updated schema and rename schema components ([a80f02d](https://github.com/ubiquity-os-marketplace/command-config/commit/a80f02d56ca2085627695c38b041487f2f7f021f))
+* adjust validator to use updated schema and rename schema components for clarity ([44c3e43](https://github.com/ubiquity-os-marketplace/command-config/commit/44c3e43fd92f9e27703e3a66d4ddb21fb55a1bbf))
+* change log level from info to warn when no PRs are created ([c4219cf](https://github.com/ubiquity-os-marketplace/command-config/commit/c4219cf0c80d84683bd0d4fb13606ee299fbae67))
+* improve logging clarity and enhance manifest handling ([00a84c6](https://github.com/ubiquity-os-marketplace/command-config/commit/00a84c67c61c31fe9187edb83a714a0c526f3cd0))
+* simplify plugin identifier parsing in validator and adjust schemas ([8af997f](https://github.com/ubiquity-os-marketplace/command-config/commit/8af997f05f238467e0b5e61d972ecb35a8032a21))
+
 ## [1.1.0](https://github.com/ubiquity-os-marketplace/command-config/compare/v1.0.0...v1.1.0) (2025-08-17)
 
 
