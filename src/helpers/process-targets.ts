@@ -1,11 +1,24 @@
-import prettier from "prettier";
+import { ConfigurationHandler } from "@ubiquity-os/plugin-sdk/configuration";
 import { Manifest } from "../types/github";
 import { Context } from "../types/index";
 import { Target } from "../types/target";
 import { applyChanges } from "./apply-changes";
-import { fetchManifests } from "./fetch-manifests";
 import { getFileContent } from "./get-file-content";
-import { parseConfig } from "./validator";
+
+async function maybeFormatYaml(content: string, context: Context): Promise<string> {
+  if (process.env.JEST_WORKER_ID) return content;
+
+  try {
+    const prettier = await import("prettier");
+    return await prettier.format(content, {
+      parser: "yaml",
+      ...((await prettier.resolveConfig(".prettierrc")) || {}),
+    });
+  } catch (err) {
+    context.logger.warn("Prettier formatting failed, using unformatted YAML.", { err, content });
+    return content;
+  }
+}
 
 function extractYamlOnly(text: string): string {
   text = text.replace(/^```yaml[\r\n]?/i, "").replace(/```$/i, "");
@@ -18,56 +31,61 @@ function extractYamlOnly(text: string): string {
 
 export async function processTargetRepos(
   target: Target,
-  parserCode: string,
   editorInstruction: string,
   context: Context,
   manifestStore?: Record<string, Manifest>
 ): Promise<string | undefined> {
   const { currentFileContents } = await fetchAndParseFileContent(context, target, manifestStore);
 
-  // Build Prompt
-  const { adapters } = context;
-  const prompt = adapters.openai.completions.promptBuilder(currentFileContents, parserCode, manifestStore ?? {}, target.url);
-
-  context.logger.info(`Prompt: ${prompt}`);
-  // Update the file with the new content by making a LLM call
-  const llmResponse = await adapters.openai.completions.createCompletions(prompt, editorInstruction);
-
-  // Log the updated file contents
-  context.logger.info(`Updated file contents: ${JSON.stringify(llmResponse)}`);
-
-  const updatedFileContents = extractYamlOnly(llmResponse.text);
-
-  // Format YAML using Prettier before PR creation
-  let formattedFileContents = updatedFileContents;
-  try {
-    formattedFileContents = await prettier.format(updatedFileContents, {
-      parser: "yaml",
-      ...((await prettier.resolveConfig(".prettierrc")) || {}),
-    });
-  } catch (err) {
-    context.logger.warn("Prettier formatting failed, using unformatted YAML.", { err, content: updatedFileContents });
+  if (!currentFileContents) {
+    context.logger.warn("No content was found for the manifest.");
+    return undefined;
   }
 
+  // Build Prompt
+  const { adapters } = context;
+  const prompt = adapters.llm.completions.promptBuilder(currentFileContents, manifestStore ?? {}, target.url);
+  context.logger.info("Built prompt for YAML editor.", { chars: prompt.length });
+
+  // Update the file with the new content by making a LLM call
+  const llmResponse = await adapters.llm.completions.createCompletions(prompt, editorInstruction.trim());
+  context.logger.info("LLM response received.", { attempts: llmResponse.metadata.attempts, outputChars: llmResponse.text.length });
+
+  const updatedFileContents = extractYamlOnly(llmResponse.text);
+  const formattedFileContents = await maybeFormatYaml(updatedFileContents, context);
+
   if (formattedFileContents.trim() === currentFileContents.trim()) {
-    context.logger.warn("No change was triggered by the instruction.");
+    context.logger.debug("No change was triggered by the instruction.");
     return undefined;
   }
 
   const { pullRequestUrl } = await applyChanges(target, formattedFileContents, context, editorInstruction);
-  context.logger.info(`Pull request created: ${pullRequestUrl}`);
+  context.logger.ok(`Pull request created: ${pullRequestUrl}`);
   return pullRequestUrl;
 }
 
 export async function fetchAndParseFileContent(context: Context, target: Target, manifestStore?: Record<string, Manifest>) {
-  const currentFileContents = await getFileContent(context, target.owner, target.repo, target.filePath);
-  if (!currentFileContents) throw context.logger.error("File content not found. for target: " + JSON.stringify(target));
+  const environment = typeof context.config.environment === "string" ? context.config.environment.trim() : "";
+  const cfgHandler = new ConfigurationHandler(context.logger, context.octokit, environment || null);
+  const config = await cfgHandler.getConfigurationFromRepo(target.owner, target.repo);
 
-  // Parse Config
-  const parsedUrls = parseConfig(currentFileContents, context.logger);
-  // Manifest Cache (to avoid fetching the same manifest multiple times)
-  const manifestCache: Record<string, Manifest> = manifestStore || {};
-  // Fetch Manifest
-  const manifests = await fetchManifests(parsedUrls, manifestCache, context);
-  return { currentFileContents, manifests };
+  let currentFileContents: string | undefined;
+  try {
+    currentFileContents = await getFileContent(context, target.owner, target.repo, target.filePath);
+  } catch (error) {
+    context.logger.warn("Failed to fetch target config file; falling back to resolved configuration.", { err: error, target });
+  }
+
+  if (manifestStore && config.config?.plugins) {
+    for (const key of Object.keys(config.config.plugins)) {
+      const manifest = config.config.plugins[key];
+      if (manifest) {
+        manifestStore[key] = { ...manifest, name: key };
+      }
+    }
+  }
+  return {
+    currentFileContents: currentFileContents ?? config.rawData,
+    manifests: config.config?.plugins,
+  };
 }

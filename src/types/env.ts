@@ -12,7 +12,8 @@ import { LOG_LEVEL } from "@ubiquity-os/ubiquity-os-logger";
 export const envSchema = T.Object({
   LOG_LEVEL: T.Optional(T.Enum(LOG_LEVEL, { default: LOG_LEVEL.INFO })),
   KERNEL_PUBLIC_KEY: T.Optional(T.String()),
-  OPENROUTER_API_KEY: T.String(),
+  PLUGIN_GITHUB_TOKEN: T.Optional(T.String()),
+  UOS_AI_TOKEN: T.Optional(T.String()),
 });
 
 export type Env = StaticDecode<typeof envSchema>;

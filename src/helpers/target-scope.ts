@@ -1,8 +1,57 @@
 import path from "node:path";
+import { CONFIG_PROD_FULL_PATH } from "@ubiquity-os/plugin-sdk/configuration";
 import { Context } from "../types/index";
 import { Target } from "../types/target";
 import { getFileContent } from "./get-file-content";
 import { checkOrgPermissions, checkUserRepoPermissions } from "./user-permission";
+
+const VALID_CONFIG_SUFFIX = /^[a-z0-9][a-z0-9_-]*$/i;
+
+function normalizeEnvironmentName(environment: string | null | undefined): string {
+  return String(environment ?? "")
+    .trim()
+    .toLowerCase();
+}
+
+function getConfigPathCandidatesForEnvironment(environment: string | null | undefined): string[] {
+  const normalized = normalizeEnvironmentName(environment);
+  if (!normalized) {
+    return [CONFIG_PROD_FULL_PATH];
+  }
+  if (normalized === "production" || normalized === "prod") {
+    return [CONFIG_PROD_FULL_PATH];
+  }
+
+  if (!VALID_CONFIG_SUFFIX.test(normalized)) {
+    return [CONFIG_PROD_FULL_PATH];
+  }
+
+  return [`.github/.ubiquity-os.config.${normalized}.yml`, CONFIG_PROD_FULL_PATH];
+}
+
+function readEnvironment(context: Context): string {
+  return typeof context.config.environment === "string" ? context.config.environment.trim() : "";
+}
+
+function getConfigPathCandidates(context: Context): string[] {
+  return getConfigPathCandidatesForEnvironment(readEnvironment(context));
+}
+
+function getPrimaryConfigPath(context: Context): string {
+  const environment = readEnvironment(context);
+  return getConfigPathCandidatesForEnvironment(environment)[0];
+}
+
+async function tryGetRepoConfigFile(context: Context, owner: string, repo: string, filePath: string, label: string): Promise<string | undefined> {
+  try {
+    return await getFileContent(context, owner, repo, filePath);
+  } catch (error: unknown) {
+    context.logger.debug(
+      `${label} config file not found in repo: ${owner}/${repo}/${filePath}. Error: ${error instanceof Error ? error.message : String(error)}`
+    );
+    return undefined;
+  }
+}
 
 async function processBaseTargets(context: Context): Promise<Record<string, Target>> {
   const { config, logger } = context;
@@ -12,7 +61,9 @@ async function processBaseTargets(context: Context): Promise<Record<string, Targ
   for (const target of config.defaultTargets) {
     const match = RegExp(/github\.com\/([^/]+)\/([^/]+)(\.git)?$/).exec(target.name);
     if (!match) {
-      throw logger.error(`Invalid GitHub URL: ${target.name}`);
+      const message = `Invalid GitHub URL: ${target.name}`;
+      logger.warn(message);
+      throw new Error(message);
     }
     const owner = match[1];
     const repo = match[2].replace(".git", "");
@@ -25,7 +76,7 @@ async function processBaseTargets(context: Context): Promise<Record<string, Targ
       repo,
       localDir: path.join(owner, repo),
       url: target.name,
-      filePath: target.type === "dev" ? config.devConfigPath : config.configPath,
+      filePath: getPrimaryConfigPath(context),
       readonly: !hasRepoPermission,
     });
   }
@@ -39,66 +90,39 @@ async function processBaseTargets(context: Context): Promise<Record<string, Targ
   return targetMap;
 }
 
-async function processRepoConfigs(
-  context: Context,
-  targetMap: Record<string, Target>
-): Promise<{ repoConfig: string | undefined; repoDevConfig: string | undefined }> {
-  const { payload, config, logger } = context;
+async function processRepoConfigs(context: Context, targetMap: Record<string, Target>): Promise<{ repoConfig: string | undefined }> {
+  const { payload } = context;
   const repoOwner = payload.repository.owner.login;
   const repoName = payload.repository.name;
-  let repoConfig, repoDevConfig;
 
-  try {
-    // Try to get repo level configs
-    repoConfig = await getFileContent(context, repoOwner, repoName, config.configPath);
-  } catch (error: unknown) {
-    logger.info(
-      `Config file not found in repo: ${repoOwner}/${repoName}/${config.configPath}. Error: ${error instanceof Error ? error.message : String(error)}`
-    );
+  const baseRepoTarget = {
+    owner: repoOwner,
+    repo: repoName,
+    localDir: path.join(repoOwner, repoName),
+    url: `https://github.com/${repoOwner}/${repoName}.git`,
+    readonly: false,
+  } satisfies Omit<Target, "type" | "filePath">;
+
+  for (const candidate of getConfigPathCandidates(context)) {
+    const repoConfig = await tryGetRepoConfigFile(context, repoOwner, repoName, candidate, "Config");
+    if (!repoConfig) continue;
+
+    const repoTarget: Target = {
+      type: "config",
+      ...baseRepoTarget,
+      filePath: candidate,
+    };
+    targetMap[buildIdForTarget(repoTarget)] = repoTarget;
+    return { repoConfig };
   }
 
-  try {
-    repoDevConfig = await getFileContent(context, repoOwner, repoName, config.devConfigPath);
-  } catch (error: unknown) {
-    logger.info(
-      `Dev config file not found in repo: ${repoOwner}/${repoName}/${config.devConfigPath}. Error: ${error instanceof Error ? error.message : String(error)}`
-    );
-  }
-
-  if (repoConfig || repoDevConfig) {
-    if (repoConfig) {
-      const repoTarget: Target = {
-        type: "config",
-        owner: repoOwner,
-        repo: repoName,
-        localDir: path.join(repoOwner, repoName),
-        url: `https://github.com/${repoOwner}/${repoName}.git`,
-        filePath: config.configPath,
-        readonly: false,
-      };
-      targetMap[buildIdForTarget(repoTarget)] = repoTarget;
-    }
-
-    if (repoDevConfig) {
-      const repoDevTarget: Target = {
-        type: "dev",
-        owner: repoOwner,
-        repo: repoName,
-        localDir: path.join(repoOwner, repoName),
-        url: `https://github.com/${repoOwner}/${repoName}.git`,
-        filePath: config.devConfigPath,
-        readonly: false,
-      };
-      targetMap[buildIdForTarget(repoDevTarget)] = repoDevTarget;
-    }
-  }
-
-  return { repoConfig, repoDevConfig };
+  return { repoConfig: undefined };
 }
 
 async function getConfig(context: Context, orgName: string, repoName: string, configPath: string) {
   try {
     const content = await getFileContent(context, orgName, repoName, configPath);
+    if (!content) return null;
     return { content, configPath };
   } catch {
     return null;
@@ -106,24 +130,28 @@ async function getConfig(context: Context, orgName: string, repoName: string, co
 }
 
 async function processOrgConfig(context: Context, targetMap: Record<string, Target>): Promise<void> {
-  const { payload, config, logger } = context;
+  const { payload, logger } = context;
   const orgName = payload.repository.owner.login || (payload.organization && payload.organization.login);
-  let filePath = config.configPath;
+  const candidatePaths = getConfigPathCandidates(context);
+  let filePath = candidatePaths[0] ?? CONFIG_PROD_FULL_PATH;
 
   if (!orgName) {
-    throw logger.error("Organization not found in payload.");
+    const message = "Organization not found in payload.";
+    logger.warn(message);
+    throw new Error(message);
   }
 
   try {
-    // Try to get org level configs
-    const orgConfig = (
-      await Promise.all([getConfig(context, orgName, ".ubiquity-os", config.devConfigPath), getConfig(context, orgName, ".ubiquity-os", config.configPath)])
-    )
-      .filter((o) => !!o)
-      .shift();
+    let orgConfig: { content: string; configPath: string } | null = null;
+    for (const candidate of candidatePaths) {
+      orgConfig = await getConfig(context, orgName, ".ubiquity-os", candidate);
+      if (orgConfig?.content) {
+        break;
+      }
+    }
 
     if (!orgConfig?.content) {
-      logger.info("No configuration found at repository or organization level.");
+      logger.debug("No configuration found at repository or organization level.");
       return;
     }
 
@@ -141,16 +169,16 @@ async function processOrgConfig(context: Context, targetMap: Record<string, Targ
 
     targetMap[buildIdForTarget(orgRepoTarget)] = orgRepoTarget;
   } catch (error: unknown) {
-    logger.info(`Organization config file not found: ${orgName}/.ubiquity-os/${filePath}. Error: ${error instanceof Error ? error.message : String(error)}`);
+    logger.debug(`Organization config file not found: ${orgName}/.ubiquity-os/${filePath}. Error: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
 export async function targetBuilder(context: Context): Promise<Record<string, Target>> {
   try {
     const targetMap: Record<string, Target> = {};
-    const { repoConfig, repoDevConfig } = await processRepoConfigs(context, targetMap);
+    const { repoConfig } = await processRepoConfigs(context, targetMap);
 
-    if (!(repoConfig || repoDevConfig)) {
+    if (!repoConfig) {
       await processOrgConfig(context, targetMap);
     }
 
@@ -160,7 +188,7 @@ export async function targetBuilder(context: Context): Promise<Record<string, Ta
 
     return targetMap;
   } catch (error: unknown) {
-    context.logger.info(`Error accessing configurations: ${error || "Unknown error"}`);
+    context.logger.error(`Error accessing configurations: ${error || "Unknown error"}`);
     return {};
   }
 }
