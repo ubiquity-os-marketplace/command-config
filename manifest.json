@@ -115,5 +115,6 @@
         }
       }
     }
-  }
+  },
+  "homepage_url": "https://command-config-main.deno.dev"
 }
