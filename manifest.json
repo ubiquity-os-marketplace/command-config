@@ -1,0 +1,119 @@
+{
+  "name": "@ubiquity-os-marketplace/command-config",
+  "short_name": "ubiquity-os-marketplace/command-config@main",
+  "description": "Use plain english to change our organization configs for UbiquityOS.",
+  "commands": {
+    "config": {
+      "description": "Configure the UbiquityOS plugin.",
+      "ubiquity:example": "/config <editor_instruction>",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "editor_instruction": {
+            "description": "Instruction used to update plugin configuration.",
+            "examples": [
+              "set response mode to concise"
+            ],
+            "type": "string"
+          },
+          "editorInstruction": {
+            "description": "Instruction used to update plugin configuration.",
+            "examples": [
+              "set response mode to concise"
+            ],
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "ubiquity:listeners": [],
+  "skipBotEvents": true,
+  "configuration": {
+    "default": {},
+    "type": "object",
+    "properties": {
+      "environment": {
+        "type": "string"
+      },
+      "autoMerge": {
+        "default": false,
+        "type": "boolean"
+      },
+      "model": {
+        "default": "gpt-5.2-codex",
+        "examples": [
+          "gpt-5.2-codex",
+          "gpt-5.2-chat-latest",
+          "gpt-5.1-codex-mini",
+          "gpt-5.1-chat-latest"
+        ],
+        "type": "string"
+      },
+      "reasoningEffort": {
+        "default": "medium",
+        "anyOf": [
+          {
+            "const": "none",
+            "type": "string"
+          },
+          {
+            "const": "minimal",
+            "type": "string"
+          },
+          {
+            "const": "low",
+            "type": "string"
+          },
+          {
+            "const": "medium",
+            "type": "string"
+          },
+          {
+            "const": "high",
+            "type": "string"
+          },
+          {
+            "const": "xhigh",
+            "type": "string"
+          }
+        ]
+      },
+      "defaultTargets": {
+        "default": [
+          {
+            "name": "https://github.com/ubiquity-os/.ubiquity-os.git",
+            "type": "main"
+          }
+        ],
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "default": "https://github.com/ubiquity-os/.ubiquity-os.git",
+              "type": "string"
+            },
+            "branch": {
+              "default": "main",
+              "type": "string"
+            },
+            "type": {
+              "default": "main",
+              "anyOf": [
+                {
+                  "const": "main",
+                  "type": "string"
+                },
+                {
+                  "const": "dev",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}
