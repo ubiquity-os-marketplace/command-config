@@ -37,7 +37,6 @@ on:
       - deno_deploy.build.routed
   delete:
 
-
 jobs:
   publish-action-artifact:
     name: "Publish Action Artifact"
@@ -49,7 +48,6 @@ jobs:
       DEPLOY_DENO_ENABLED: ${{ github.event_name == 'workflow_dispatch' && inputs.deploy_deno_enabled || vars.DEPLOY_DENO_ENABLED || 'true' }}
       SKIP_BOT_EVENTS: ${{ github.event_name == 'workflow_dispatch' && inputs.skip_bot_events || vars.SKIP_BOT_EVENTS || 'true' }}
       EXCLUDE_SUPPORTED_EVENTS: ${{ github.event_name == 'workflow_dispatch' && inputs.exclude_supported_events || vars.EXCLUDE_SUPPORTED_EVENTS || 'issue_comment.created,pull_request_review_comment.created' }}
-
 
     steps:
       - name: Resolve source ref
@@ -108,7 +106,6 @@ jobs:
           APP_ID: ${{ secrets.APP_ID }}
           APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
 
-
   deploy-deno:
     name: "Provision Deno App"
     if: ${{ github.event_name != 'repository_dispatch' }}
@@ -120,7 +117,6 @@ jobs:
       DEPLOY_DENO_ENABLED: ${{ github.event_name == 'workflow_dispatch' && inputs.deploy_deno_enabled || vars.DEPLOY_DENO_ENABLED || 'true' }}
       SKIP_BOT_EVENTS: ${{ github.event_name == 'workflow_dispatch' && inputs.skip_bot_events || vars.SKIP_BOT_EVENTS || 'true' }}
       EXCLUDE_SUPPORTED_EVENTS: ${{ github.event_name == 'workflow_dispatch' && inputs.exclude_supported_events || vars.EXCLUDE_SUPPORTED_EVENTS || 'issue_comment.created,pull_request_review_comment.created' }}
-
 
     steps:
       - name: Resolve source ref
