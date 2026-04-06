@@ -38,6 +38,39 @@ on:
   delete:
 
 jobs:
+  resolve_source_ref:
+    name: "Resolve source ref"
+    if: ${{ github.event_name != 'repository_dispatch' }}
+    runs-on: ubuntu-latest
+    outputs:
+      source_ref: ${{ steps.refs.outputs.source_ref }}
+      is_tag_ref: ${{ steps.refs.outputs.is_tag_ref }}
+      is_artifact_ref: ${{ steps.refs.outputs.is_artifact_ref }}
+
+    steps:
+      - name: Resolve source ref
+        id: refs
+        shell: bash
+        run: |
+          source_ref="$(echo '${{ github.event.ref || github.event.workflow_run.head_branch || github.ref }}' | sed 's#refs/heads/##' | sed 's#refs/tags/##')"
+          if [[ -z "$source_ref" ]]; then
+            source_ref="${GITHUB_REF_NAME}"
+          fi
+
+          is_tag_ref="false"
+          if [[ "${{ github.event.ref_type || '' }}" == "tag" ]] || [[ "${GITHUB_REF:-}" == refs/tags/* ]]; then
+            is_tag_ref="true"
+          fi
+
+          is_artifact_ref="false"
+          if [[ "$source_ref" == dist/* ]]; then
+            is_artifact_ref="true"
+          fi
+
+          echo "source_ref=$source_ref" >> "$GITHUB_OUTPUT"
+          echo "is_tag_ref=$is_tag_ref" >> "$GITHUB_OUTPUT"
+          echo "is_artifact_ref=$is_artifact_ref" >> "$GITHUB_OUTPUT"
+
   publish-action-artifact:
     name: "Publish Action Artifact"
     if: ${{ github.event_name != 'repository_dispatch' }}
@@ -66,6 +99,7 @@ jobs:
 
   deploy-deno:
     name: "Provision Deno App"
+    needs: resolve_source_ref
     if: ${{ github.event_name != 'repository_dispatch' }}
     runs-on: ubuntu-latest
     permissions: write-all
@@ -78,10 +112,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        if: ${{ github.event_name != 'delete' && env.DEPLOY_DENO_ENABLED == 'true' && github.event.ref_type != 'tag' && !startsWith(github.ref, 'refs/tags/') && !startsWith(github.event.workflow_run.head_branch || github.ref_name, 'dist/') }}
+        if: ${{ github.event_name != 'delete' && env.DEPLOY_DENO_ENABLED == 'true' && needs.resolve_source_ref.outputs.is_tag_ref != 'true' && needs.resolve_source_ref.outputs.is_artifact_ref != 'true' }}
 
       - uses: ubiquity-os/deno-deploy@issue-17-deno-deploy-app-migration
-        if: ${{ env.DEPLOY_DENO_ENABLED == 'true' && github.event.ref_type != 'tag' && !startsWith(github.ref, 'refs/tags/') && !startsWith(github.event.workflow_run.head_branch || github.ref_name, 'dist/') }}
+        if: ${{ env.DEPLOY_DENO_ENABLED == 'true' && needs.resolve_source_ref.outputs.is_tag_ref != 'true' && needs.resolve_source_ref.outputs.is_artifact_ref != 'true' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           KERNEL_PUBLIC_KEY: ${{ secrets.KERNEL_PUBLIC_KEY }}
