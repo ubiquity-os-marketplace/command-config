@@ -33,7 +33,7 @@ describe("Plugin tests", () => {
     const worker = (await import("../src/worker")).default;
     const response = await worker.fetch(new Request("http://localhost/manifest.json"), {});
     const content = await response.json();
-    expect(content).toEqual(manifest);
+    expect(content).toEqual({ ...manifest, homepage_url: "http://localhost" });
   });
 
   describe("Sync Config Tests", () => {
