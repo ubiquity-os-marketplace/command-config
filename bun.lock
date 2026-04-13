@@ -8,6 +8,7 @@
         "@sinclair/typebox": "0.34.47",
         "@ubiquity-os/plugin-sdk": "3.12.5",
         "@ubiquity-os/ubiquity-os-logger": "^1.4.0",
+        "hono": "^4.11.1",
         "openai": "^4.86.2",
         "prettier": "3.4.2",
       },
