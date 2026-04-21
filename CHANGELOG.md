@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.2.1](https://github.com/ubiquity-os-marketplace/command-config/compare/v1.2.0...v1.2.1) (2026-04-21)
+
+
+### Bug Fixes
+
+* add json import attributes for deno ([228af58](https://github.com/ubiquity-os-marketplace/command-config/commit/228af5854140e714b6c2408fb202a14b19a09e37))
+* address non-transitive CI failures ([029563c](https://github.com/ubiquity-os-marketplace/command-config/commit/029563c0652b2983474e636ad3e28c44eb989a12))
+* align deno worker env handling ([b9bcfa7](https://github.com/ubiquity-os-marketplace/command-config/commit/b9bcfa7963707d88b765b6b623ee0fdb628656b1))
+* bump plugin-sdk for runtime manifest refs ([d78eaf7](https://github.com/ubiquity-os-marketplace/command-config/commit/d78eaf79a2d143b793988f17a817de108686cc9b))
+* widen runtime env typing ([70e1ec5](https://github.com/ubiquity-os-marketplace/command-config/commit/70e1ec5d5a1dab82a7104786429c88c5f73067b3))
+
 ## [1.2.0](https://github.com/ubiquity-os-marketplace/command-config/compare/v1.1.0...v1.2.0) (2025-12-15)
 
 
