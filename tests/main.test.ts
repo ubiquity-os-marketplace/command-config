@@ -3,7 +3,7 @@ import { drop } from "@mswjs/data";
 import { CommentHandler } from "@ubiquity-os/plugin-sdk";
 import { customOctokit as Octokit } from "@ubiquity-os/plugin-sdk/octokit";
 import { Logs } from "@ubiquity-os/ubiquity-os-logger";
-import manifest from "../manifest.json";
+import manifest from "../manifest.json" with { type: "json" };
 import { runPlugin } from "../src";
 import { Env } from "../src/types/index";
 import { Context } from "../src/types/context";
@@ -33,7 +33,7 @@ describe("Plugin tests", () => {
     const worker = (await import("../src/worker")).default;
     const response = await worker.fetch(new Request("http://localhost/manifest.json"), {});
     const content = await response.json();
-    expect(content).toEqual(manifest);
+    expect(content).toEqual({ ...manifest, homepage_url: "http://localhost" });
   });
 
   describe("Sync Config Tests", () => {

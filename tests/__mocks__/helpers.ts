@@ -2,7 +2,7 @@ import { Buffer } from "node:buffer";
 import { db } from "./db";
 import issueTemplate from "./issue-template";
 import { STRINGS } from "./strings";
-import usersGet from "./users-get.json";
+import usersGet from "./users-get.json" with { type: "json" };
 
 /**
  * Helper function to setup tests.
