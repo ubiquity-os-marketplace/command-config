@@ -4,6 +4,8 @@ import { Context } from "../types/index";
 import { Target } from "../types/target";
 import { applyChanges } from "./apply-changes";
 import { getFileContent } from "./get-file-content";
+import { buildPluginAliasIndex, expandPluginInstallShorthand } from "./plugin-alias";
+import { resolveLatestPluginRefs } from "./resolve-latest-plugin-refs";
 
 async function maybeFormatYaml(content: string, context: Context): Promise<string> {
   if (process.env.JEST_WORKER_ID) return content;
@@ -47,8 +49,15 @@ export async function processTargetRepos(
   const prompt = adapters.llm.completions.promptBuilder(currentFileContents, manifestStore ?? {}, target.url);
   context.logger.info("Built prompt for YAML editor.", { chars: prompt.length });
 
+  let resolvedEditorInstruction = editorInstruction.trim();
+  if (manifestStore) {
+    const aliasExpansion = expandPluginInstallShorthand(resolvedEditorInstruction, buildPluginAliasIndex(manifestStore));
+    resolvedEditorInstruction = aliasExpansion.expandedInstruction;
+  }
+  resolvedEditorInstruction = await resolveLatestPluginRefs(resolvedEditorInstruction, context);
+
   // Update the file with the new content by making a LLM call
-  const llmResponse = await adapters.llm.completions.createCompletions(prompt, editorInstruction.trim());
+  const llmResponse = await adapters.llm.completions.createCompletions(prompt, resolvedEditorInstruction);
   context.logger.info("LLM response received.", { attempts: llmResponse.metadata.attempts, outputChars: llmResponse.text.length });
 
   const updatedFileContents = extractYamlOnly(llmResponse.text);

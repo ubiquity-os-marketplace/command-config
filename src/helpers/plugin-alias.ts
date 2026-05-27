@@ -148,3 +148,10 @@ export function expandPluginInstallShorthand(instruction: string, index: PluginA
 
   return { expandedInstruction, replacements, ambiguous };
 }
+
+export function parseConfigPluginKey(key: string): { owner: string; repo: string; ref: string } | null {
+  if (URL_REGEX.test(key)) return null;
+  const match = /^([0-9A-Za-z._-]+)\/([0-9A-Za-z._-]+)@([^\s:]+)$/.exec(key.trim());
+  if (!match) return null;
+  return { owner: match[1], repo: match[2], ref: match[3] };
+}
